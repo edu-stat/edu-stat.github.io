@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>成绩分析系统 - 期末成绩统计表生成</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary: #0070C0;
+    --primary-dark: #003366;
+    --primary-light: #EBF1F8;
+    --accent: #2ecc71;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --border: #d9d9d9;
+    --bg: #f5f7fa;
+    --white: #ffffff;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: white;
+    padding: 24px 32px;
+    text-align: center;
+  }
+  .header h1 { font-size: 26px; font-weight: 700; letter-spacing: 2px; }
+  .header p { font-size: 14px; opacity: 0.85; margin-top: 6px; }
+
+  /* Container */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  /* Steps indicator */
+  .steps {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    padding: 10px 20px;
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    font-size: 14px;
+    color: var(--text-light);
+    transition: all 0.3s;
+    border: 2px solid transparent;
+  }
+  .step.active { border-color: var(--primary); color: var(--primary); font-weight: 600; }
+  .step.done { border-color: var(--accent); color: var(--accent); }
+  .step .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-light);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step.active .num { background: var(--primary); color: white; }
+  .step.done .num { background: var(--accent); color: white; }
+  .step-arrow { color: var(--border); font-size: 18px; }
+
+  /* Cards */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* Upload area */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 50px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #fafbfc;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .upload-zone .icon { font-size: 48px; color: var(--primary); margin-bottom: 12px; }
+  .upload-zone p { color: var(--text-light); font-size: 15px; }
+  .upload-zone .hint { font-size: 12px; color: var(--text-light); margin-top: 8px; }
+  .upload-zone input { display: none; }
+
+  /* File info */
+  .file-info {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #e8f5e9;
+    border-radius: 6px;
+    margin-top: 16px;
+  }
+  .file-info.show { display: flex; }
+  .file-info .name { font-weight: 600; flex: 1; }
+  .file-info .status { color: var(--accent); font-size: 13px; }
+
+  /* Subjects detected */
+  .subjects-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 16px;
+  }
+  .subjects-list .tag {
+    padding: 4px 14px;
+    background: var(--primary-light);
+    border: 1px solid var(--primary);
+    border-radius: 16px;
+    font-size: 13px;
+    color: var(--primary);
+  }
+
+  /* Full marks form */
+  .fullmarks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .fullmarks-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fullmarks-item label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .fullmarks-item input {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 15px;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .fullmarks-item input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0,112,192,0.1);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-primary:disabled { background: #b0c4de; cursor: not-allowed; transform: none; }
+  .btn-success { background: var(--accent); color: white; }
+  .btn-success:hover { background: #27ae60; transform: translateY(-1px); }
+  .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .btn-danger { background: #e74c3c; color: white; }
+  .btn-danger:hover { background: #c0392b; }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Results table */
+  .table-wrapper {
+    overflow-x: auto;
+    margin-top: 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  table.results {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 800px;
+  }
+  table.results th, table.results td {
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.results thead th {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  table.results thead th.sub-header {
+    background: #005a9e;
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+  table.results thead th.merged {
+    font-size: 13px;
+  }
+  table.results tbody tr:nth-child(even) { background: var(--primary-light); }
+  table.results tbody tr:hover { background: #d4e3f5; }
+  table.results tbody td:first-child, table.results tbody td:nth-child(2) {
+    font-weight: 600;
+  }
+  table.results .school-row {
+    background: #fff3cd !important;
+    font-weight: 600;
+  }
+  table.results .school-row td { border-top: 2px solid #ffc107; }
+  table.results .rank-good { color: var(--accent); font-weight: 600; }
+  table.results .rank-bad { color: #e74c3c; font-weight: 600; }
+  table.results .gap-positive { color: var(--accent); }
+  table.results .gap-negative { color: #e74c3c; }
+
+  /* Stats summary */
+  .stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 6px;
+    text-align: center;
+  }
+  .stat-card .value { font-size: 24px; font-weight: 700; color: var(--primary); }
+  .stat-card .label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+  /* Loading */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 30px;
+  }
+  .loading.show { display: block; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Error / warning */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  .alert-error { background: #fdecea; color: #c0392b; border: 1px solid #f5c6cb; }
+  .alert-success { background: #e8f5e9; color: #27ae60; border: 1px solid #c3e6cb; }
+  .alert-info { background: var(--primary-light); color: var(--primary); border: 1px solid #b8d4f0; }
+
+  /* Actions bar */
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header h1 { font-size: 20px; }
+    .container { padding: 12px; }
+    .card { padding: 16px; }
+    .fullmarks-grid { grid-template-columns: 1fr 1fr; }
+    .steps .step { font-size: 12px; padding: 6px 12px; }
+    .stats-summary { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Tooltip */
+  .tooltip { position: relative; cursor: help; }
+  .tooltip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 期末成绩分析系统</h1>
+  <p>上传成绩表 → 自动识别学科 → 设置满分 → 生成分析总结表</p>
+</div>
+
+<div class="container">
+  <!-- Steps -->
+  <div class="steps" id="steps">
+    <div class="step active" id="step1"><span class="num">1</span> 上传成绩表</div>
+    <span class="step-arrow">→</span>
+    <div class="step" id="step2"><span class="num">2</span> 设置满分</div>
+    <span class="step-arrow">→</span>
+    <div class="step" id="step3"><span class="num">3</span> 分析结果</div>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div class="section active" id="section1">
+    <div class="card">
+      <div class="card-title"><span class="badge">1</span> 上传学生成绩表</div>
+      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">
+        请上传Excel格式的学生成绩表（.xlsx / .xls），表格第一行应为表头，包含：姓名、班级及各学科名称。
+      </p>
+      <div class="upload-zone" id="uploadZone">
+        <div class="icon">📂</div>
+        <p><strong>点击上传</strong> 或将 Excel 文件拖拽到此处</p>
+        <p class="hint">支持 .xlsx 和 .xls 格式</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+      </div>
+      <div class="file-info" id="fileInfo">
+        <span>📄</span>
+        <span class="name" id="fileName">-</span>
+        <span class="status">✅ 已上传</span>
+      </div>
+      <div class="loading" id="loadingUpload">
+        <div class="spinner"></div>
+        <p>正在解析文件...</p>
+      </div>
+    </div>
+
+    <div class="card" id="subjectsCard" style="display:none;">
+      <div class="card-title"><span class="badge">📋</span> 自动识别到以下学科</div>
+      <div class="subjects-list" id="subjectsList"></div>
+      <div class="alert alert-info" style="margin-top:12px;">
+        💡 共识别到 <strong id="subjectCount">0</strong> 个学科，按表格从左到右顺序排列。
+        请点击"下一步"设置各学科满分。
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="goToStep2()">下一步：设置满分 →</button>
+        <button class="btn btn-outline" onclick="resetUpload()">重新上传</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Full Marks -->
+  <div class="section" id="section2">
+    <div class="card">
+      <div class="card-title"><span class="badge">2</span> 设置各学科满分</div>
+      <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">
+        请为每个学科输入满分值。系统将根据以下标准自动计算各率：<br>
+        <span style="background:var(--primary-light);padding:2px 8px;border-radius:4px;font-size:12px;">
+          🏆 优秀 ≥ 85% &nbsp;|&nbsp; 👍 良好 ≥ 70% &nbsp;|&nbsp; ✅ 及格 ≥ 60% &nbsp;|&nbsp; ⚠️ 低分 &lt; 30%
+        </span>
+      </p>
+      <div class="fullmarks-grid" id="fullmarksGrid"></div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="calculateAnalysis()">🚀 生成分析结果</button>
+        <button class="btn btn-outline" onclick="goToStep1()">← 返回修改</button>
+      </div>
+      <div class="loading" id="loadingCalc">
+        <div class="spinner"></div>
+        <p>正在计算分析数据...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Results -->
+  <div class="section" id="section3">
+    <div class="card">
+      <div class="card-title"><span class="badge">3</span> 成绩分析总结表</div>
+
+      <!-- School summary stats -->
+      <div id="schoolSummary"></div>
+
+      <!-- Quick stats cards -->
+      <div id="quickStats"></div>
+
+      <!-- Results table -->
+      <div class="table-wrapper" id="resultTableWrapper">
+        <table class="results" id="resultTable"></table>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-success" onclick="exportExcel()">📥 导出 Excel</button>
+        <button class="btn btn-outline" onclick="goToStep1()">🔄 重新开始</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== State =====================
+let state = {
+  rawData: null,       // Parsed workbook data (array of arrays)
+  headerRow: null,     // First row (header)
+  subjects: [],        // Detected subject names
+  fullMarks: {},       // { subject: fullMark }
+  classData: {},       // { className: [...] } - students per class
+  subjectCols: [],     // Column indices for each subject
+  allClasses: [],      // Sorted class list
+  schoolStats: {},     // { subject: { avg, excellentRate, ... } }
+  classStats: [],      // [{ class, count, subject: {...} }]
+  fileName: ''
+};
+
+// ===================== Constants =====================
+const STAT_ITEMS = [
+  '平均分', '校均差距', '排名',
+  '及格率%', '校均差距%', '排名',
+  '良好率%', '校均差距%', '排名',
+  '优秀率%', '校均差距%', '排名',
+  '低分率%', '校均差距%', '排名'
+];
+
+// ===================== Step Navigation =====================
+function goToStep1() {
+  setActiveStep(1);
+  document.getElementById('section1').classList.add('active');
+  document.getElementById('section2').classList.remove('active');
+  document.getElementById('section3').classList.remove('active');
+}
+
+function goToStep2() {
+  setActiveStep(2);
+  document.getElementById('section1').classList.remove('active');
+  document.getElementById('section2').classList.add('active');
+  document.getElementById('section3').classList.remove('active');
+}
+
+function goToStep3() {
+  setActiveStep(3);
+  document.getElementById('section1').classList.remove('active');
+  document.getElementById('section2').classList.remove('active');
+  document.getElementById('section3').classList.add('active');
+}
+
+function setActiveStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step' + i);
+    el.classList.toggle('active', i === n);
+    el.classList.toggle('done', i < n);
+  }
+}
+
+// ===================== File Upload =====================
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+
+uploadZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadZone.classList.add('dragover');
+});
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('dragover');
+});
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['xlsx', 'xls'].includes(ext)) {
+    alert('请上传 .xlsx 或 .xls 格式的文件');
+    return;
+  }
+
+  state.fileName = file.name;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileInfo').classList.add('show');
+  document.getElementById('loadingUpload').classList.add('show');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      parseWorkbook(workbook);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('loadingUpload').classList.remove('show');
+      showError('文件解析失败：' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseWorkbook(workbook) {
+  // Use first sheet
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+  if (json.length < 2) {
+    document.getElementById('loadingUpload').classList.remove('show');
+    showError('表格数据不足，至少需要表头行和一行数据');
+    return;
+  }
+
+  state.rawData = json;
+  state.headerRow = json[0];
+
+  // ----- 查找"班级"列 -----
+  let classCol = -1;
+  for (let i = 0; i < state.headerRow.length; i++) {
+    const val = String(state.headerRow[i] || '').trim();
+    if (val === '班级') {
+      classCol = i;
+      break;
+    }
+  }
+
+  if (classCol === -1) {
+    document.getElementById('loadingUpload').classList.remove('show');
+    showError('未找到"班级"列！请确保表头行（第一行）包含"班级"列名称。');
+    return;
+  }
+
+  // ----- 查找"姓名"列（也要屏蔽，不识别为学科）-----
+  let nameCol = -1;
+  const nameKeywords = ['姓名', '名字', '学生', '学生姓名', '名称', '考生'];
+  for (let i = 0; i < state.headerRow.length; i++) {
+    const val = String(state.headerRow[i] || '').trim();
+    if (nameKeywords.includes(val)) {
+      nameCol = i;
+      break;
+    }
+  }
+
+  // ----- 提取学科：跳过"班级"和"姓名"列，其余非空列按原顺序作为学科 -----
+  const subjects = [];
+  const subjectCols = []; // 记录每个学科在原数据中的列索引
+  for (let i = 0; i < state.headerRow.length; i++) {
+    const val = String(state.headerRow[i] || '').trim();
+    const isSkipCol = (i === classCol || i === nameCol);
+    if (val !== '' && val !== 'null' && val !== 'undefined' && !isSkipCol) {
+      subjects.push(val);
+      subjectCols.push(i);
+    }
+  }
+
+  if (subjects.length === 0) {
+    document.getElementById('loadingUpload').classList.remove('show');
+    showError('未能从表头中识别到学科。请确保表头行包含学科名称。');
+    return;
+  }
+
+  state.subjects = subjects;
+  state.subjectCols = subjectCols;
+
+  // ----- 解析学生数据 -----
+  const classMap = {};
+
+  for (let r = 1; r < json.length; r++) {
+    const row = json[r];
+    const className = String(row[classCol] || '').trim();
+    if (!className || className === '') continue;
+
+    const student = {};
+    let valid = false;
+
+    subjects.forEach((subj, idx) => {
+      const colIdx = subjectCols[idx];
+      const val = parseFloat(row[colIdx]);
+      if (!isNaN(val)) {
+        student[subj] = val;
+        valid = true;
+      } else {
+        student[subj] = null;
+      }
+    });
+
+    if (valid) {
+      if (!classMap[className]) classMap[className] = [];
+      classMap[className].push(student);
+    }
+  }
+
+  state.classData = classMap;
+  state.allClasses = Object.keys(classMap)
+    .map(c => isNaN(c) ? c : parseFloat(c))
+    .sort((a, b) => a - b);
+
+  document.getElementById('loadingUpload').classList.remove('show');
+
+  // Show subjects card
+  renderSubjects();
+  document.getElementById('subjectsCard').style.display = 'block';
+  setActiveStep(1);
+}
+
+function renderSubjects() {
+  const list = document.getElementById('subjectsList');
+  list.innerHTML = '';
+  state.subjects.forEach(s => {
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = s;
+    list.appendChild(tag);
+  });
+  document.getElementById('subjectCount').textContent = state.subjects.length;
+}
+
+function resetUpload() {
+  state = {
+    rawData: null, headerRow: null, subjects: [],
+    subjectCols: [],
+    fullMarks: {}, classData: {}, allClasses: [],
+    schoolStats: {}, classStats: [], fileName: ''
+  };
+  document.getElementById('fileInfo').classList.remove('show');
+  document.getElementById('subjectsCard').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  goToStep1();
+  setActiveStep(1);
+}
+
+// ===================== Step 2: Full Marks =====================
+function showStep2() {
+  const grid = document.getElementById('fullmarksGrid');
+  grid.innerHTML = '';
+
+  state.subjects.forEach(subj => {
+    const div = document.createElement('div');
+    div.className = 'fullmarks-item';
+    div.innerHTML = `
+      <label for="fm_${subj}">${subj}</label>
+      <input type="number" id="fm_${subj}" value="100" min="1" step="0.5">
+    `;
+    grid.appendChild(div);
+  });
+
+  origGoToStep2();
+}
+
+// Override goToStep2 to also render full marks form
+const origGoToStep2 = goToStep2;
+goToStep2 = function() {
+  showStep2();  // showStep2 now calls origGoToStep2 at the end
+};
+
+// ===================== Calculation =====================
+function calculateAnalysis() {
+  // Collect full marks
+  const fullMarks = {};
+  state.subjects.forEach(subj => {
+    const input = document.getElementById('fm_' + subj);
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val <= 0) {
+      alert(`请为"${subj}"输入有效的满分值`);
+      input.focus();
+      return;
+    }
+    fullMarks[subj] = val;
+  });
+  state.fullMarks = fullMarks;
+
+  document.getElementById('loadingCalc').classList.add('show');
+
+  // Use setTimeout to allow UI to update
+  setTimeout(() => {
+    try {
+      doCalculation();
+      renderResults();
+      document.getElementById('loadingCalc').classList.remove('show');
+      goToStep3();
+    } catch (err) {
+      document.getElementById('loadingCalc').classList.remove('show');
+      showError('计算过程出错：' + err.message);
+      console.error(err);
+    }
+  }, 100);
+}
+
+function doCalculation() {
+  const subjects = state.subjects;
+  const fullMarks = state.fullMarks;
+  const classData = state.classData;
+  const allClasses = state.allClasses;
+
+  // 1. School-level stats
+  const schoolStats = {};
+  subjects.forEach(subj => {
+    const allScores = [];
+    allClasses.forEach(cls => {
+      classData[cls].forEach(stu => {
+        if (stu[subj] !== null && stu[subj] !== undefined) {
+          allScores.push(stu[subj]);
+        }
+      });
+    });
+    schoolStats[subj] = calculateRates(allScores, fullMarks[subj]);
+  });
+  state.schoolStats = schoolStats;
+
+  // 2. Class-level stats
+  const classStatsList = [];
+  allClasses.forEach(cls => {
+    const students = classData[cls];
+    const classStat = { class: cls, count: students.length };
+
+    subjects.forEach(subj => {
+      const scores = students.map(s => s[subj]).filter(v => v !== null && v !== undefined);
+      const stats = calculateRates(scores, fullMarks[subj]);
+
+      // Calculate gaps
+      stats.avgGap = stats.avg - schoolStats[subj].avg;
+      stats.passGap = stats.passRate - schoolStats[subj].passRate;
+      stats.goodGap = stats.goodRate - schoolStats[subj].goodRate;
+      stats.excellentGap = stats.excellentRate - schoolStats[subj].excellentRate;
+      stats.lowGap = stats.lowRate - schoolStats[subj].lowRate;
+
+      classStat[subj] = stats;
+    });
+
+    classStatsList.push(classStat);
+  });
+
+  // 3. Rankings
+  subjects.forEach(subj => {
+    // Avg rank
+    const sortedByAvg = [...classStatsList].sort((a, b) => b[subj].avg - a[subj].avg);
+    sortedByAvg.forEach((cs, idx) => { cs[subj].avgRank = idx + 1; });
+
+    // Pass rate rank
+    const sortedByPass = [...classStatsList].sort((a, b) => b[subj].passRate - a[subj].passRate);
+    sortedByPass.forEach((cs, idx) => { cs[subj].passRank = idx + 1; });
+
+    // Good rate rank
+    const sortedByGood = [...classStatsList].sort((a, b) => b[subj].goodRate - a[subj].goodRate);
+    sortedByGood.forEach((cs, idx) => { cs[subj].goodRank = idx + 1; });
+
+    // Excellent rate rank
+    const sortedByExcellent = [...classStatsList].sort((a, b) => b[subj].excellentRate - a[subj].excellentRate);
+    sortedByExcellent.forEach((cs, idx) => { cs[subj].excellentRank = idx + 1; });
+
+    // Low rate rank (lower is better)
+    const sortedByLow = [...classStatsList].sort((a, b) => a[subj].lowRate - b[subj].lowRate);
+    sortedByLow.forEach((cs, idx) => { cs[subj].lowRank = idx + 1; });
+  });
+
+  // Also calculate overall avg rank
+  const sortedByOverall = [...classStatsList].sort((a, b) => b[subjects[0]].avg - a[subjects[0]].avg);
+  sortedByOverall.forEach((cs, idx) => { cs.avgRank = idx + 1; });
+
+  state.classStats = classStatsList;
+}
+
+function calculateRates(scores, fullMark) {
+  const total = scores.length;
+  if (total === 0) {
+    return { avg: 0, excellentRate: 0, goodRate: 0, passRate: 0, lowRate: 0 };
+  }
+
+  const sum = scores.reduce((a, b) => a + b, 0);
+  const avg = sum / total;
+
+  const excellentLine = fullMark * 0.85;
+  const goodLine = fullMark * 0.70;
+  const passLine = fullMark * 0.60;
+  const lowLine = fullMark * 0.30;
+
+  const excellentCount = scores.filter(s => s >= excellentLine).length;
+  const goodCount = scores.filter(s => s >= goodLine).length;
+  const passCount = scores.filter(s => s >= passLine).length;
+  const lowCount = scores.filter(s => s < lowLine).length;
+
+  return {
+    avg: avg,
+    excellentRate: excellentCount / total,
+    goodRate: goodCount / total,
+    passRate: passCount / total,
+    lowRate: lowCount / total,
+    total: total
+  };
+}
+
+// ===================== Render Results =====================
+function renderResults() {
+  const subjects = state.subjects;
+  const schoolStats = state.schoolStats;
+  const classStats = state.classStats;
+  const fullMarks = state.fullMarks;
+
+  // Quick stats
+  renderQuickStats();
+
+  // Build table
+  const table = document.getElementById('resultTable');
+  table.innerHTML = '';
+
+  // --- Title row ---
+  const totalCols = 2 + subjects.length * 15;
+  const titleRow = table.createTHead().insertRow();
+  const titleCell = titleRow.insertCell();
+  titleCell.colSpan = totalCols;
+  titleCell.textContent = `期末成绩分析总结表 - ${state.fileName.replace(/\.\w+$/, '')}`;
+  titleCell.style.cssText = 'background:#003366;color:white;font-size:16px;font-weight:700;padding:12px;text-align:center;';
+
+  // --- Header row 1: 班级 | 人数 | Subject1 (span 15) | Subject2 (span 15) | ... ---
+  const thead = table.createTHead();
+  // Remove the title row from thead and make it a caption
+  table.deleteTHead();
+
+  const caption = table.createCaption();
+  caption.textContent = `期末成绩分析总结表 - ${state.fileName.replace(/\.\w+$/, '')}`;
+  caption.style.cssText = 'background:#003366;color:white;font-size:16px;font-weight:700;padding:12px;text-align:center;caption-side:top;';
+
+  const headerRow1 = table.insertRow();
+  const h1_c1 = headerRow1.insertCell();
+  h1_c1.textContent = '班级';
+  h1_c1.rowSpan = 2;
+  h1_c1.style.cssText = 'background:#0070C0;color:white;font-weight:600;text-align:center;padding:8px;min-width:50px;';
+
+  const h1_c2 = headerRow1.insertCell();
+  h1_c2.textContent = '人数';
+  h1_c2.rowSpan = 2;
+  h1_c2.style.cssText = 'background:#0070C0;color:white;font-weight:600;text-align:center;padding:8px;min-width:50px;';
+
+  subjects.forEach(subj => {
+    const cell = headerRow1.insertCell();
+    cell.colSpan = 15;
+    cell.textContent = subj + (fullMarks[subj] ? ` (满分${fullMarks[subj]})` : '');
+    cell.style.cssText = 'background:#0070C0;color:white;font-weight:600;text-align:center;padding:8px;';
+  });
+
+  // --- Header row 2: sub-items ---
+  const headerRow2 = table.insertRow();
+  // 班级 and 人数 are rowSpan=2, so we skip 2 cells
+
+  subjects.forEach(() => {
+    STAT_ITEMS.forEach(item => {
+      const cell = headerRow2.insertCell();
+      cell.textContent = item;
+      cell.style.cssText = 'background:#005a9e;color:white;font-size:11px;text-align:center;padding:4px 6px;';
+    });
+  });
+
+  // --- Data rows ---
+  classStats.forEach(cs => {
+    const row = table.insertRow();
+
+    const cellClass = row.insertCell();
+    cellClass.textContent = cs.class;
+    cellClass.style.fontWeight = '600';
+
+    const cellCount = row.insertCell();
+    cellCount.textContent = cs.count;
+    cellCount.style.fontWeight = '600';
+
+    subjects.forEach(subj => {
+      const s = cs[subj];
+      const schoolS = schoolStats[subj];
+
+      // 1. 平均分
+      addCell(row, s.avg, 'num');
+      // 2. 校均差距
+      addCell(row, s.avgGap, 'gap');
+      // 3. 排名
+      addCell(row, s.avgRank, 'rank');
+      // 4. 及格率%
+      addCell(row, s.passRate * 100, 'pct');
+      // 5. 校均差距%
+      addCell(row, s.passGap * 100, 'gap');
+      // 6. 排名
+      addCell(row, s.passRank, 'rank');
+      // 7. 良好率%
+      addCell(row, s.goodRate * 100, 'pct');
+      // 8. 校均差距%
+      addCell(row, s.goodGap * 100, 'gap');
+      // 9. 排名
+      addCell(row, s.goodRank, 'rank');
+      // 10. 优秀率%
+      addCell(row, s.excellentRate * 100, 'pct');
+      // 11. 校均差距%
+      addCell(row, s.excellentGap * 100, 'gap');
+      // 12. 排名
+      addCell(row, s.excellentRank, 'rank');
+      // 13. 低分率%
+      addCell(row, s.lowRate * 100, 'pct');
+      // 14. 校均差距%
+      addCell(row, s.lowGap * 100, 'gap');
+      // 15. 排名
+      addCell(row, s.lowRank, 'rank_rev');
+    });
+  });
+
+  // --- School total row ---
+  const schoolRow = table.insertRow();
+  schoolRow.className = 'school-row';
+  addCell(schoolRow, '全校', 'label');
+  const totalStudents = Object.values(state.classData).reduce((sum, arr) => sum + arr.length, 0);
+  addCell(schoolRow, totalStudents, 'label');
+
+  subjects.forEach(subj => {
+    const s = schoolStats[subj];
+
+    addCell(schoolRow, s.avg, 'num');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, s.passRate * 100, 'pct');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, s.goodRate * 100, 'pct');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, s.excellentRate * 100, 'pct');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, s.lowRate * 100, 'pct');
+    addCell(schoolRow, '', 'empty');
+    addCell(schoolRow, '', 'empty');
+  });
+}
+
+function addCell(row, value, type) {
+  const cell = row.insertCell();
+  if (type === 'empty') {
+    cell.textContent = '';
+    return;
+  }
+
+  if (typeof value === 'number') {
+    if (type === 'pct') {
+      cell.textContent = value.toFixed(2);
+    } else if (type === 'num') {
+      cell.textContent = value.toFixed(2);
+    } else if (type === 'gap') {
+      cell.textContent = (value >= 0 ? '+' : '') + value.toFixed(2);
+      cell.className = value >= 0 ? 'gap-positive' : 'gap-negative';
+    } else if (type === 'rank') {
+      cell.textContent = value;
+      cell.className = value <= 3 ? 'rank-good' : (value >= state.allClasses.length - 1 ? 'rank-bad' : '');
+    } else if (type === 'rank_rev') {
+      cell.textContent = value;
+      cell.className = value <= 3 ? 'rank-good' : (value >= state.allClasses.length - 1 ? 'rank-bad' : '');
+    } else {
+      cell.textContent = value.toFixed(2);
+    }
+  } else {
+    cell.textContent = value;
+  }
+  cell.style.textAlign = 'right';
+}
+
+function renderQuickStats() {
+  const subjects = state.subjects;
+  const schoolStats = state.schoolStats;
+  const container = document.getElementById('quickStats');
+  container.innerHTML = '';
+
+  // Overall summary
+  const summaryDiv = document.getElementById('schoolSummary');
+  summaryDiv.innerHTML = `<div class="alert alert-info">
+    📊 共 <strong>${state.allClasses.length}</strong> 个班级，<strong>${Object.values(state.classData).reduce((s, a) => s + a.length, 0)}</strong> 名学生，
+    <strong>${subjects.length}</strong> 个学科参与分析
+  </div>`;
+
+  subjects.forEach(subj => {
+    const s = schoolStats[subj];
+    const fm = state.fullMarks[subj];
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.cssText = 'padding:16px 20px;margin-bottom:12px;';
+    card.innerHTML = `
+      <div style="font-weight:600;font-size:15px;margin-bottom:10px;color:var(--primary);">
+        📚 ${subj} <span style="color:var(--text-light);font-weight:400;font-size:13px;">（满分 ${fm} 分）</span>
+      </div>
+      <div class="stats-summary">
+        <div class="stat-card">
+          <div class="value">${s.avg.toFixed(2)}</div>
+          <div class="label">平均分</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${(s.excellentRate * 100).toFixed(2)}%</div>
+          <div class="label">优秀率 (≥${fm * 0.85})</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${(s.goodRate * 100).toFixed(2)}%</div>
+          <div class="label">良好率 (≥${fm * 0.7})</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${(s.passRate * 100).toFixed(2)}%</div>
+          <div class="label">及格率 (≥${fm * 0.6})</div>
+        </div>
+        <div class="stat-card">
+          <div class="value">${(s.lowRate * 100).toFixed(2)}%</div>
+          <div class="label">低分率 (&lt;${fm * 0.3})</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ===================== Export =====================
+function exportExcel() {
+  try {
+    const wb = XLSX.utils.book_new();
+    const subjects = state.subjects;
+    const schoolStats = state.schoolStats;
+    const classStats = state.classStats;
+    const fullMarks = state.fullMarks;
+
+    // Build data array
+    const data = [];
+
+    // Title
+    const titleRow = Array(2 + subjects.length * 15).fill('');
+    titleRow[0] = `期末成绩分析总结表 - ${state.fileName.replace(/\.\w+$/, '')}`;
+    data.push(titleRow);
+
+    // Header row 1
+    const h1 = ['班级', '人数'];
+    subjects.forEach(subj => {
+      h1.push(subj);
+      for (let i = 0; i < 14; i++) h1.push('');
+    });
+    data.push(h1);
+
+    // Header row 2
+    const h2 = ['', ''];
+    subjects.forEach(() => {
+      STAT_ITEMS.forEach(item => h2.push(item));
+    });
+    data.push(h2);
+
+    // Data rows
+    classStats.forEach(cs => {
+      const row = [cs.class, cs.count];
+      subjects.forEach(subj => {
+        const s = cs[subj];
+        row.push(s.avg, s.avgGap, s.avgRank);
+        row.push(s.passRate * 100, s.passGap * 100, s.passRank);
+        row.push(s.goodRate * 100, s.goodGap * 100, s.goodRank);
+        row.push(s.excellentRate * 100, s.excellentGap * 100, s.excellentRank);
+        row.push(s.lowRate * 100, s.lowGap * 100, s.lowRank);
+      });
+      data.push(row);
+    });
+
+    // School total row
+    const totalStudents = Object.values(state.classData).reduce((s, arr) => s + arr.length, 0);
+    const schoolRow = ['全校', totalStudents];
+    subjects.forEach(subj => {
+      const s = schoolStats[subj];
+      schoolRow.push(s.avg, '', '');
+      schoolRow.push(s.passRate * 100, '', '');
+      schoolRow.push(s.goodRate * 100, '', '');
+      schoolRow.push(s.excellentRate * 100, '', '');
+      schoolRow.push(s.lowRate * 100, '', '');
+    });
+    data.push(schoolRow);
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Column widths
+    const wscols = [{ wch: 6 }, { wch: 6 }];
+    subjects.forEach(() => {
+      wscols.push({ wch: 10 }, { wch: 10 }, { wch: 6 });
+      wscols.push({ wch: 10 }, { wch: 10 }, { wch: 6 });
+      wscols.push({ wch: 10 }, { wch: 10 }, { wch: 6 });
+      wscols.push({ wch: 10 }, { wch: 10 }, { wch: 6 });
+      wscols.push({ wch: 10 }, { wch: 10 }, { wch: 6 });
+    });
+    ws['!cols'] = wscols;
+
+    // Merge title cell
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 1 + subjects.length * 15 } }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, '成绩分析表');
+    XLSX.writeFile(wb, `成绩分析总结表_${new Date().toISOString().slice(0,10)}.xlsx`);
+  } catch (err) {
+    alert('导出失败：' + err.message);
+    console.error(err);
+  }
+}
+
+// ===================== Error Display =====================
+function showError(msg) {
+  const existing = document.querySelector('.alert-error');
+  if (existing) existing.remove();
+
+  const el = document.createElement('div');
+  el.className = 'alert alert-error';
+  el.textContent = '❌ ' + msg;
+  document.getElementById('section1').querySelector('.card').appendChild(el);
+}
+
+// ===================== Init =====================
+// Override goToStep2 click from step1
+document.addEventListener('DOMContentLoaded', () => {
+  // Default full marks
+  state.subjects.forEach(s => {
+    state.fullMarks[s] = 100;
+  });
+});
+</script>
+</body>
+</html>
