@@ -504,7 +504,7 @@
       <div class="subjects-list" id="subjectsList-a"></div>
       <div class="alert alert-info" style="margin-top:12px;">
         💡 共识别到 <strong id="subjectCount-a">0</strong> 个学科，按表格从左到右顺序排列。
-        请点击"下一步"设置各学科满分。
+        <div id="typeInfo-a" style="margin-top:6px;"></div>
       </div>
       <div class="actions">
         <button class="btn btn-primary" onclick="goToStepA2()">下一步：设置满分 →</button>
@@ -518,9 +518,9 @@
     <div class="card">
       <div class="card-title"><span class="badge">2</span> 设置各学科满分</div>
       <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">
-        请为每个学科输入满分值。系统将根据以下标准自动计算各率：<br>
+        请为每个分数科目输入满分值。等级科目可直接分析。<br>
         <span style="background:var(--primary-light);padding:2px 8px;border-radius:4px;font-size:12px;">
-          🏆 优秀 ≥ 85% &nbsp;|&nbsp; 👍 良好 ≥ 70% &nbsp;|&nbsp; ✅ 及格 ≥ 60% &nbsp;|&nbsp; ⚠️ 低分 &lt; 30%
+          🏆 优秀 ≥ 85% &nbsp;|&nbsp; 👍 良好 ≥ 70% &nbsp;|&nbsp; ✅ 及格 ≥ 60% &nbsp;|&nbsp; ⚠️ 低分 &lt; 40%
         </span>
       </p>
       <div class="fullmarks-grid" id="fullmarksGrid-a"></div>
@@ -699,6 +699,7 @@
       <div class="subjects-list" id="subjectsList-t"></div>
       <div class="alert alert-info" style="margin-top:12px;">
         💡 共识别到 <strong id="subjectCount-t">0</strong> 个学科。请继续上传教师任课表。
+        <div id="typeInfo-t" style="margin-top:6px;"></div>
       </div>
       <div class="actions">
         <button class="btn btn-primary" onclick="goToStepT2()">下一步：上传任课表 →</button>
@@ -751,7 +752,7 @@
       <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">
         请为每个学科输入满分值。系统将自动计算以下统计数据：<br>
         <span style="background:var(--primary-light);padding:2px 8px;border-radius:4px;font-size:12px;">
-          🏆 优秀 ≥ 85% &nbsp;|&nbsp; ✅ 及格 ≥ 60% &nbsp;|&nbsp; ⚠️ 低分 &lt; 30%
+          🏆 优秀 ≥ 85% &nbsp;|&nbsp; ✅ 及格 ≥ 60% &nbsp;|&nbsp; ⚠️ 低分 &lt; 40%
         </span>
       </p>
       <div class="fullmarks-grid" id="fullmarksGrid-t"></div>
@@ -768,6 +769,43 @@
 
   <!-- Step T4: Results -->
   <div class="section" id="section-t4">
+    <div class="card" id="titleConfigCard">
+      <div class="card-title"><span class="badge">📝</span> 文档标题设置</div>
+      <p style="color:var(--text-light);margin-bottom:12px;font-size:14px;">
+        设置导出 Word 文档的标题信息。
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+        <div class="fullmarks-item">
+          <label>学校名称</label>
+          <input type="text" id="docSchoolName" value="济南十六里河中学" oninput="updateDocTitlePreview()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:15px;width:100%;">
+        </div>
+        <div class="fullmarks-item">
+          <label>学年</label>
+          <input type="text" id="docYear" value="2025-2026" oninput="updateDocTitlePreview()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:15px;width:100%;">
+        </div>
+        <div class="fullmarks-item">
+          <label>学期</label>
+          <select id="docTerm" onchange="updateDocTitlePreview()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:15px;width:100%;">
+            <option value="第一学期">第一学期</option>
+            <option value="第二学期">第二学期</option>
+          </select>
+        </div>
+        <div class="fullmarks-item">
+          <label>年级</label>
+          <input type="text" id="docGrade" value="八年级" oninput="updateDocTitlePreview()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:15px;width:100%;">
+        </div>
+        <div class="fullmarks-item">
+          <label style="display:flex;align-items:center;gap:8px;padding-top:20px;">
+            <input type="checkbox" id="docCumulative" onchange="updateDocTitlePreview()">
+            <span>累计统计</span>
+          </label>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px 14px;background:var(--primary-light);border-radius:6px;font-size:14px;">
+        📄 文档标题预览：<strong id="docTitlePreview">济南十六里河中学2025-2026第一学期八年级期末考试成绩统计表</strong>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title"><span class="badge">4</span> 教师统计结果</div>
       <div id="teacherSummary"></div>
@@ -788,7 +826,9 @@ let analysisState = {
   rawData: null, headerRow: null, subjects: [], subjectCols: [],
   fullMarks: {}, classData: {}, allClasses: [],
   schoolStats: {}, classStats: [], fileName: '',
-  classCol: -1, nameCol: -1
+  classCol: -1, nameCol: -1,
+  columnTypes: {},       // { subject: 'score' | 'grade' }
+  gradeData: {}          // { subject: { className: [gradeStr, ...] } }
 };
 
 let gradeState = {
@@ -804,6 +844,14 @@ const STAT_ITEMS = [
   '良好率%', '校均差距%', '排名',
   '优秀率%', '校均差距%', '排名',
   '低分率%', '校均差距%', '排名'
+];
+
+const GRADE_STAT_ITEMS = [
+  'A人数', 'A率', '排名',
+  'B人数', 'B率', '排名',
+  'C人数', 'C率', '排名',
+  'D人数', 'D率', '排名',
+  'E人数', 'E率', '排名'
 ];
 
 // ===================== Tab Switching =====================
@@ -901,6 +949,49 @@ function parseWorkbookCommon(workbook, stateObj, prefix) {
   return true;
 }
 
+// ===================== Column Type Detection =====================
+function detectColumnTypes(state) {
+  const types = {};
+  const gradeData = {};
+  const { subjects, subjectCols, rawData, classCol } = state;
+
+  subjects.forEach((subj, idx) => {
+    const colIdx = subjectCols[idx];
+    let numCount = 0;
+    let gradeCount = 0;
+    const gradeValues = {};
+
+    for (let r = 1; r < rawData.length; r++) {
+      const row = rawData[r];
+      const val = String(row[colIdx] || '').trim();
+      if (!val) continue;
+
+      const cls = String(row[classCol] || '').trim();
+      if (!cls) continue;
+
+      const num = parseFloat(val);
+      if (!isNaN(num)) {
+        numCount++;
+      } else if (/^[A-Ea-e]$/.test(val)) {
+        gradeCount++;
+        if (!gradeValues[cls]) gradeValues[cls] = [];
+        gradeValues[cls].push(val.toUpperCase());
+      }
+      // Skip other values (neither number nor A-E)
+    }
+
+    const total = numCount + gradeCount;
+    types[subj] = (total > 0 && gradeCount > numCount) ? 'grade' : 'score';
+
+    if (types[subj] === 'grade') {
+      gradeData[subj] = gradeValues;
+    }
+  });
+
+  state.columnTypes = types;
+  state.gradeData = gradeData;
+}
+
 // ===================== TAB 1: 成绩分析 =====================
 function setupUploadA() {
   const zone = document.getElementById('uploadZone-a');
@@ -926,6 +1017,29 @@ function handleFileA(file) {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       if (parseWorkbookCommon(workbook, analysisState, 'a')) {
+        detectColumnTypes(analysisState);
+        // Ensure classData has students even when all columns are grades
+        const types = analysisState.columnTypes;
+        const allGrade = analysisState.subjects.every(s => types[s] === 'grade');
+        if (allGrade && Object.keys(analysisState.classData).length === 0) {
+          const { rawData, classCol, subjectCols, subjects } = analysisState;
+          const classMap = {};
+          for (let r = 1; r < rawData.length; r++) {
+            const row = rawData[r];
+            const className = String(row[classCol] || '').trim();
+            if (!className) continue;
+            const student = {};
+            subjects.forEach((subj, idx) => {
+              student[subj] = null;
+            });
+            if (!classMap[className]) classMap[className] = [];
+            classMap[className].push(student);
+          }
+          analysisState.classData = classMap;
+          analysisState.allClasses = Object.keys(classMap)
+            .map(c => isNaN(c) ? c : parseFloat(c))
+            .sort((a, b) => a - b);
+        }
         renderSubjectsA();
         document.getElementById('subjectsCard-a').style.display = 'block';
         setActiveStepA(1);
@@ -941,15 +1055,32 @@ function handleFileA(file) {
 function renderSubjectsA() {
   const list = document.getElementById('subjectsList-a');
   list.innerHTML = '';
+  const types = analysisState.columnTypes;
   analysisState.subjects.forEach(s => {
-    const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = s;
+    const tag = document.createElement('span'); tag.className = 'tag';
+    const isGrade = types[s] === 'grade';
+    tag.textContent = s + (isGrade ? ' (等级)' : ' (分数)');
+    tag.style.cssText = isGrade
+      ? 'padding:4px 14px;background:#e8f5e9;border:1px solid #27ae60;border-radius:16px;font-size:13px;color:#27ae60;'
+      : 'padding:4px 14px;background:var(--primary-light);border:1px solid var(--primary);border-radius:16px;font-size:13px;color:var(--primary);';
     list.appendChild(tag);
   });
   document.getElementById('subjectCount-a').textContent = analysisState.subjects.length;
+  // Show type info alert
+  const infoEl = document.getElementById('typeInfo-a');
+  if (infoEl) {
+    const scoreCount = analysisState.subjects.filter(s => types[s] !== 'grade').length;
+    const gradeCount = analysisState.subjects.filter(s => types[s] === 'grade').length;
+    infoEl.innerHTML = scoreCount > 0 && gradeCount > 0
+      ? `📌 检测到 <strong>${scoreCount}</strong> 个分数科目（需设置满分）和 <strong>${gradeCount}</strong> 个等级科目（直接分析等级分布）`
+      : gradeCount > 0
+        ? `📌 检测到 <strong>${gradeCount}</strong> 个等级科目，系统将直接生成等级分布分析`
+        : `📌 所有科目均为分数类型，请设置各科满分值`;
+  }
 }
 
 function resetUploadA() {
-  analysisState = { rawData: null, headerRow: null, subjects: [], subjectCols: [], fullMarks: {}, classData: {}, allClasses: [], schoolStats: {}, classStats: [], fileName: '', classCol: -1, nameCol: -1 };
+  analysisState = { rawData: null, headerRow: null, subjects: [], subjectCols: [], fullMarks: {}, classData: {}, allClasses: [], schoolStats: {}, classStats: [], fileName: '', classCol: -1, nameCol: -1, columnTypes: {}, gradeData: {} };
   document.getElementById('fileInfo-a').classList.remove('show');
   document.getElementById('subjectsCard-a').style.display = 'none';
   document.getElementById('fileInput-a').value = '';
@@ -986,16 +1117,47 @@ function setActiveStepA(n) {
 function showFullMarksA() {
   const grid = document.getElementById('fullmarksGrid-a');
   grid.innerHTML = '';
-  analysisState.subjects.forEach(subj => {
-    const div = document.createElement('div'); div.className = 'fullmarks-item';
-    div.innerHTML = `<label for="fm_${subj}">${subj}</label><input type="number" id="fm_${subj}" value="100" min="1" step="0.5">`;
-    grid.appendChild(div);
-  });
+  const types = analysisState.columnTypes;
+  const hasScore = analysisState.subjects.some(s => types[s] !== 'grade');
+  const hasGrade = analysisState.subjects.some(s => types[s] === 'grade');
+
+  // Update step label
+  const step2 = document.getElementById('step-a2');
+  step2.innerHTML = hasScore ? '<span class="num">2</span> 设置满分' : '<span class="num">2</span> 分析结果';
+
+  if (hasGrade) {
+    // Show grade subjects info
+    analysisState.subjects.forEach(subj => {
+      if (types[subj] === 'grade') {
+        const div = document.createElement('div'); div.className = 'fullmarks-item';
+        div.innerHTML = `<label style="color:#27ae60;">${subj}（等级科目）</label>
+          <div style="padding:8px 12px;background:#e8f5e9;border-radius:6px;font-size:13px;color:#27ae60;">
+            ✅ 等级数据可直接分析，无需设置满分
+          </div>`;
+        grid.appendChild(div);
+      }
+    });
+  }
+
+  if (hasScore) {
+    analysisState.subjects.forEach(subj => {
+      if (types[subj] !== 'grade') {
+        const div = document.createElement('div'); div.className = 'fullmarks-item';
+        div.innerHTML = `<label for="fm_${subj}">${subj}</label><input type="number" id="fm_${subj}" value="100" min="1" step="0.5">`;
+        grid.appendChild(div);
+      }
+    });
+  }
 }
 
 function calculateAnalysis() {
+  const types = analysisState.columnTypes;
   const fullMarks = {};
   for (const subj of analysisState.subjects) {
+    if (types[subj] === 'grade') {
+      fullMarks[subj] = 0; // placeholder for grade columns
+      continue;
+    }
     const input = document.getElementById('fm_' + subj);
     const val = parseFloat(input.value);
     if (isNaN(val) || val <= 0) { alert(`请为"${subj}"输入有效的满分值`); input.focus(); return; }
@@ -1019,12 +1181,24 @@ function calculateAnalysis() {
 }
 
 function doCalculationA() {
-  const { subjects, fullMarks, classData, allClasses } = analysisState;
+  const { subjects, fullMarks, classData, allClasses, columnTypes, gradeData } = analysisState;
   const schoolStats = {};
+
   subjects.forEach(subj => {
-    const allScores = [];
-    allClasses.forEach(cls => classData[cls].forEach(stu => { if (stu[subj] != null) allScores.push(stu[subj]); }));
-    schoolStats[subj] = calcRates(allScores, fullMarks[subj]);
+    if (columnTypes[subj] === 'grade') {
+      const allGrades = [];
+      allClasses.forEach(cls => {
+        const grades = gradeData[subj] && gradeData[subj][cls];
+        if (grades) allGrades.push(...grades);
+      });
+      schoolStats[subj] = calcGradeRates(allGrades);
+      schoolStats[subj].type = 'grade';
+    } else {
+      const allScores = [];
+      allClasses.forEach(cls => classData[cls].forEach(stu => { if (stu[subj] != null) allScores.push(stu[subj]); }));
+      schoolStats[subj] = calcRates(allScores, fullMarks[subj]);
+      schoolStats[subj].type = 'score';
+    }
   });
   analysisState.schoolStats = schoolStats;
 
@@ -1033,33 +1207,71 @@ function doCalculationA() {
     const students = classData[cls];
     const cs = { class: cls, count: students.length };
     subjects.forEach(subj => {
-      const scores = students.map(s => s[subj]).filter(v => v != null);
-      const stats = calcRates(scores, fullMarks[subj]);
-      stats.avgGap = stats.avg - schoolStats[subj].avg;
-      stats.passGap = stats.passRate - schoolStats[subj].passRate;
-      stats.goodGap = stats.goodRate - schoolStats[subj].goodRate;
-      stats.excellentGap = stats.excellentRate - schoolStats[subj].excellentRate;
-      stats.lowGap = stats.lowRate - schoolStats[subj].lowRate;
-      cs[subj] = stats;
+      if (columnTypes[subj] === 'grade') {
+        const grades = gradeData[subj] && gradeData[subj][cls] || [];
+        const stats = calcGradeRates(grades);
+        stats.type = 'grade';
+        ['A','B','C','D','E'].forEach(lev => {
+          stats[lev + '_gap'] = stats[lev + '_rate'] - schoolStats[subj][lev + '_rate'];
+        });
+        cs[subj] = stats;
+      } else {
+        const scores = students.map(s => s[subj]).filter(v => v != null);
+        const stats = calcRates(scores, fullMarks[subj]);
+        stats.type = 'score';
+        stats.avgGap = stats.avg - schoolStats[subj].avg;
+        stats.passGap = stats.passRate - schoolStats[subj].passRate;
+        stats.goodGap = stats.goodRate - schoolStats[subj].goodRate;
+        stats.excellentGap = stats.excellentRate - schoolStats[subj].excellentRate;
+        stats.lowGap = stats.lowRate - schoolStats[subj].lowRate;
+        cs[subj] = stats;
+      }
     });
     classStatsList.push(cs);
   });
 
   subjects.forEach(subj => {
-    [...classStatsList].sort((a, b) => b[subj].avg - a[subj].avg).forEach((c, i) => c[subj].avgRank = i + 1);
-    [...classStatsList].sort((a, b) => b[subj].passRate - a[subj].passRate).forEach((c, i) => c[subj].passRank = i + 1);
-    [...classStatsList].sort((a, b) => b[subj].goodRate - a[subj].goodRate).forEach((c, i) => c[subj].goodRank = i + 1);
-    [...classStatsList].sort((a, b) => b[subj].excellentRate - a[subj].excellentRate).forEach((c, i) => c[subj].excellentRank = i + 1);
-    [...classStatsList].sort((a, b) => a[subj].lowRate - b[subj].lowRate).forEach((c, i) => c[subj].lowRank = i + 1);
+    if (columnTypes[subj] === 'grade') {
+      ['A','B','C','D','E'].forEach(lev => {
+        const isAsc = (lev === 'E');
+        [...classStatsList].sort((a, b) =>
+          isAsc ? a[subj][lev + '_rate'] - b[subj][lev + '_rate']
+                : b[subj][lev + '_rate'] - a[subj][lev + '_rate']
+        ).forEach((c, i) => c[subj][lev + '_rank'] = i + 1);
+      });
+    } else {
+      [...classStatsList].sort((a, b) => b[subj].avg - a[subj].avg).forEach((c, i) => c[subj].avgRank = i + 1);
+      [...classStatsList].sort((a, b) => b[subj].passRate - a[subj].passRate).forEach((c, i) => c[subj].passRank = i + 1);
+      [...classStatsList].sort((a, b) => b[subj].goodRate - a[subj].goodRate).forEach((c, i) => c[subj].goodRank = i + 1);
+      [...classStatsList].sort((a, b) => b[subj].excellentRate - a[subj].excellentRate).forEach((c, i) => c[subj].excellentRank = i + 1);
+      [...classStatsList].sort((a, b) => a[subj].lowRate - b[subj].lowRate).forEach((c, i) => c[subj].lowRank = i + 1);
+    }
   });
   analysisState.classStats = classStatsList;
+}
+
+function calcGradeRates(grades) {
+  const total = grades.length;
+  if (total === 0) {
+    return { total: 0, A_rate: 0, B_rate: 0, C_rate: 0, D_rate: 0, E_rate: 0, A_count: 0, B_count: 0, C_count: 0, D_count: 0, E_count: 0 };
+  }
+  const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+  grades.forEach(g => { if (counts[g] !== undefined) counts[g]++; });
+  return {
+    total,
+    A_count: counts.A, A_rate: counts.A / total,
+    B_count: counts.B, B_rate: counts.B / total,
+    C_count: counts.C, C_rate: counts.C / total,
+    D_count: counts.D, D_rate: counts.D / total,
+    E_count: counts.E, E_rate: counts.E / total
+  };
 }
 
 function calcRates(scores, fullMark) {
   const total = scores.length;
   if (total === 0) return { avg: 0, excellentRate: 0, goodRate: 0, passRate: 0, lowRate: 0 };
   const avg = scores.reduce((a, b) => a + b, 0) / total;
-  const e = fullMark * 0.85, g = fullMark * 0.70, p = fullMark * 0.60, l = fullMark * 0.30;
+  const e = fullMark * 0.85, g = fullMark * 0.70, p = fullMark * 0.60, l = fullMark * 0.40;
   return {
     avg, total,
     excellentRate: scores.filter(s => s >= e).length / total,
@@ -1070,28 +1282,43 @@ function calcRates(scores, fullMark) {
 }
 
 function renderResultsA() {
-  const { subjects, schoolStats, classStats, fullMarks, classData } = analysisState;
-  const totalCols = 2 + subjects.length * 15;
+  const { subjects, schoolStats, classStats, fullMarks, classData, columnTypes } = analysisState;
 
   // Quick summary
+  const studentCount = Object.values(classData).reduce((s, a) => s + a.length, 0);
   document.getElementById('schoolSummary-a').innerHTML =
-    `<div class="alert alert-info">📊 共 <strong>${analysisState.allClasses.length}</strong> 个班级，<strong>${Object.values(classData).reduce((s, a) => s + a.length, 0)}</strong> 名学生，<strong>${subjects.length}</strong> 个学科参与分析</div>`;
+    `<div class="alert alert-info">📊 共 <strong>${analysisState.allClasses.length}</strong> 个班级，<strong>${studentCount}</strong> 名学生，<strong>${subjects.length}</strong> 个学科参与分析</div>`;
 
   const qc = document.getElementById('quickStats-a');
   qc.innerHTML = '';
   subjects.forEach(subj => {
     const s = schoolStats[subj];
     const fm = fullMarks[subj];
+    const isGrade = columnTypes[subj] === 'grade';
     const card = document.createElement('div'); card.className = 'card'; card.style.cssText = 'padding:16px 20px;margin-bottom:12px;';
-    card.innerHTML = `
-      <div style="font-weight:600;font-size:15px;margin-bottom:10px;color:var(--primary);">📚 ${subj} <span style="color:var(--text-light);font-weight:400;font-size:13px;">（满分 ${fm} 分）</span></div>
-      <div class="stats-summary">
-        <div class="stat-card"><div class="value">${s.avg.toFixed(2)}</div><div class="label">平均分</div></div>
-        <div class="stat-card"><div class="value">${(s.excellentRate*100).toFixed(2)}%</div><div class="label">优秀率 (≥${fm*0.85})</div></div>
-        <div class="stat-card"><div class="value">${(s.goodRate*100).toFixed(2)}%</div><div class="label">良好率 (≥${fm*0.7})</div></div>
-        <div class="stat-card"><div class="value">${(s.passRate*100).toFixed(2)}%</div><div class="label">及格率 (≥${fm*0.6})</div></div>
-        <div class="stat-card"><div class="value">${(s.lowRate*100).toFixed(2)}%</div><div class="label">低分率 (&lt;${fm*0.3})</div></div>
-      </div>`;
+    const totalStudents = s.total || 0;
+
+    if (isGrade) {
+      card.innerHTML = `
+        <div style="font-weight:600;font-size:15px;margin-bottom:10px;color:#27ae60;">📚 ${subj} <span style="color:var(--text-light);font-weight:400;font-size:13px;">（等级科目）</span></div>
+        <div class="grade-dist">
+          <div class="g-item g-bg-a"><span class="g-count">${s.A_count}</span><span class="g-label">A级 (${(s.A_rate*100).toFixed(1)}%)</span></div>
+          <div class="g-item g-bg-b"><span class="g-count">${s.B_count}</span><span class="g-label">B级 (${(s.B_rate*100).toFixed(1)}%)</span></div>
+          <div class="g-item g-bg-c"><span class="g-count">${s.C_count}</span><span class="g-label">C级 (${(s.C_rate*100).toFixed(1)}%)</span></div>
+          <div class="g-item g-bg-d"><span class="g-count">${s.D_count}</span><span class="g-label">D级 (${(s.D_rate*100).toFixed(1)}%)</span></div>
+          <div class="g-item g-bg-e"><span class="g-count">${s.E_count}</span><span class="g-label">E级 (${(s.E_rate*100).toFixed(1)}%)</span></div>
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div style="font-weight:600;font-size:15px;margin-bottom:10px;color:var(--primary);">📚 ${subj} <span style="color:var(--text-light);font-weight:400;font-size:13px;">（满分 ${fm} 分）</span></div>
+        <div class="stats-summary">
+          <div class="stat-card"><div class="value">${s.avg.toFixed(2)}</div><div class="label">平均分</div></div>
+          <div class="stat-card"><div class="value">${(s.excellentRate*100).toFixed(2)}%</div><div class="label">优秀率 (≥${fm*0.85})</div></div>
+          <div class="stat-card"><div class="value">${(s.goodRate*100).toFixed(2)}%</div><div class="label">良好率 (≥${fm*0.7})</div></div>
+          <div class="stat-card"><div class="value">${(s.passRate*100).toFixed(2)}%</div><div class="label">及格率 (≥${fm*0.6})</div></div>
+          <div class="stat-card"><div class="value">${(s.lowRate*100).toFixed(2)}%</div><div class="label">低分率 (&lt;${fm*0.4})</div></div>
+        </div>`;
+    }
     qc.appendChild(card);
   });
 
@@ -1109,15 +1336,20 @@ function renderResultsA() {
   hc2.style.cssText = 'background:#0070C0;color:white;font-weight:600;text-align:center;padding:8px;min-width:50px;';
   subjects.forEach(subj => {
     const c = hr1.insertCell(); c.colSpan = 15;
-    c.textContent = subj + (fullMarks[subj] ? ` (满分${fullMarks[subj]})` : '');
+    const isGrade = columnTypes[subj] === 'grade';
+    c.textContent = subj + (isGrade ? ' (等级)' : ` (满分${fullMarks[subj]})`);
     c.style.cssText = 'background:#0070C0;color:white;font-weight:600;text-align:center;padding:8px;';
   });
 
   const hr2 = table.insertRow();
-  subjects.forEach(() => STAT_ITEMS.forEach(item => {
-    const c = hr2.insertCell(); c.textContent = item;
-    c.style.cssText = 'background:#005a9e;color:white;font-size:11px;text-align:center;padding:4px 6px;';
-  }));
+  subjects.forEach(subj => {
+    const isGrade = columnTypes[subj] === 'grade';
+    const items = isGrade ? GRADE_STAT_ITEMS : STAT_ITEMS;
+    items.forEach(item => {
+      const c = hr2.insertCell(); c.textContent = item;
+      c.style.cssText = 'background:#005a9e;color:white;font-size:11px;text-align:center;padding:4px 6px;';
+    });
+  });
 
   classStats.forEach(cs => {
     const row = table.insertRow();
@@ -1125,21 +1357,40 @@ function renderResultsA() {
     const cn = row.insertCell(); cn.textContent = cs.count; cn.style.fontWeight = '600';
     subjects.forEach(subj => {
       const s = cs[subj];
-      addCellA(row, s.avg, 'num');
-      addCellA(row, s.avgGap, 'gap');
-      addCellA(row, s.avgRank, 'rank');
-      addCellA(row, s.passRate * 100, 'pct');
-      addCellA(row, s.passGap * 100, 'gap');
-      addCellA(row, s.passRank, 'rank');
-      addCellA(row, s.goodRate * 100, 'pct');
-      addCellA(row, s.goodGap * 100, 'gap');
-      addCellA(row, s.goodRank, 'rank');
-      addCellA(row, s.excellentRate * 100, 'pct');
-      addCellA(row, s.excellentGap * 100, 'gap');
-      addCellA(row, s.excellentRank, 'rank');
-      addCellA(row, s.lowRate * 100, 'pct');
-      addCellA(row, s.lowGap * 100, 'gap');
-      addCellA(row, s.lowRank, 'rank_rev');
+      const isGrade = columnTypes[subj] === 'grade';
+      if (isGrade) {
+        addCellA(row, s.A_count, 'int');
+        addCellA(row, s.A_rate * 100, 'pct2');
+        addCellA(row, s.A_rank, 'rank');
+        addCellA(row, s.B_count, 'int');
+        addCellA(row, s.B_rate * 100, 'pct2');
+        addCellA(row, s.B_rank, 'rank');
+        addCellA(row, s.C_count, 'int');
+        addCellA(row, s.C_rate * 100, 'pct2');
+        addCellA(row, s.C_rank, 'rank');
+        addCellA(row, s.D_count, 'int');
+        addCellA(row, s.D_rate * 100, 'pct2');
+        addCellA(row, s.D_rank, 'rank');
+        addCellA(row, s.E_count, 'int');
+        addCellA(row, s.E_rate * 100, 'pct2');
+        addCellA(row, s.E_rank, 'rank_rev');
+      } else {
+        addCellA(row, s.avg, 'num');
+        addCellA(row, s.avgGap, 'gap');
+        addCellA(row, s.avgRank, 'rank');
+        addCellA(row, s.passRate * 100, 'pct');
+        addCellA(row, s.passGap * 100, 'gap');
+        addCellA(row, s.passRank, 'rank');
+        addCellA(row, s.goodRate * 100, 'pct');
+        addCellA(row, s.goodGap * 100, 'gap');
+        addCellA(row, s.goodRank, 'rank');
+        addCellA(row, s.excellentRate * 100, 'pct');
+        addCellA(row, s.excellentGap * 100, 'gap');
+        addCellA(row, s.excellentRank, 'rank');
+        addCellA(row, s.lowRate * 100, 'pct');
+        addCellA(row, s.lowGap * 100, 'gap');
+        addCellA(row, s.lowRank, 'rank_rev');
+      }
     });
   });
 
@@ -1149,11 +1400,20 @@ function renderResultsA() {
   addCellA(sr, Object.values(classData).reduce((s, a) => s + a.length, 0), 'label');
   subjects.forEach(subj => {
     const s = schoolStats[subj];
-    addCellA(sr, s.avg, 'num'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
-    addCellA(sr, s.passRate * 100, 'pct'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
-    addCellA(sr, s.goodRate * 100, 'pct'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
-    addCellA(sr, s.excellentRate * 100, 'pct'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
-    addCellA(sr, s.lowRate * 100, 'pct'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
+    const isGrade = columnTypes[subj] === 'grade';
+    if (isGrade) {
+      addCellA(sr, s.A_count, 'int'); addCellA(sr, s.A_rate * 100, 'pct2'); addCellA(sr, '', 'empty');
+      addCellA(sr, s.B_count, 'int'); addCellA(sr, s.B_rate * 100, 'pct2'); addCellA(sr, '', 'empty');
+      addCellA(sr, s.C_count, 'int'); addCellA(sr, s.C_rate * 100, 'pct2'); addCellA(sr, '', 'empty');
+      addCellA(sr, s.D_count, 'int'); addCellA(sr, s.D_rate * 100, 'pct2'); addCellA(sr, '', 'empty');
+      addCellA(sr, s.E_count, 'int'); addCellA(sr, s.E_rate * 100, 'pct2'); addCellA(sr, '', 'empty');
+    } else {
+      addCellA(sr, s.avg, 'num'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
+      addCellA(sr, s.passRate * 100, 'pct'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
+      addCellA(sr, s.goodRate * 100, 'pct'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
+      addCellA(sr, s.excellentRate * 100, 'pct'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
+      addCellA(sr, s.lowRate * 100, 'pct'); addCellA(sr, '', 'empty'); addCellA(sr, '', 'empty');
+    }
   });
 }
 
@@ -1161,7 +1421,9 @@ function addCellA(row, value, type) {
   const cell = row.insertCell();
   if (type === 'empty') { cell.textContent = ''; return; }
   if (typeof value === 'number') {
-    if (type === 'pct') cell.textContent = value.toFixed(2);
+    if (type === 'int') cell.textContent = Math.round(value);
+    else if (type === 'pct2') cell.textContent = value.toFixed(2);
+    else if (type === 'pct') cell.textContent = value.toFixed(2);
     else if (type === 'num') cell.textContent = value.toFixed(2);
     else if (type === 'gap') { cell.textContent = (value >= 0 ? '+' : '') + value.toFixed(2); cell.className = value >= 0 ? 'gap-positive' : 'gap-negative'; }
     else if (type === 'rank' || type === 'rank_rev') { cell.textContent = value; cell.className = value <= 3 ? 'rank-good' : (value >= analysisState.allClasses.length - 1 ? 'rank-bad' : ''); }
@@ -1172,43 +1434,86 @@ function addCellA(row, value, type) {
 
 function exportAnalysisExcel() {
   try {
-    const { subjects, schoolStats, classStats, fullMarks, classData } = analysisState;
+    const { subjects, schoolStats, classStats, fullMarks, classData, columnTypes } = analysisState;
     const wb = XLSX.utils.book_new();
     const data = [];
-    const titleRow = Array(2 + subjects.length * 15).fill('');
+
+    // Determine column count per subject
+    function subjCols(subj) {
+      return (columnTypes[subj] === 'grade') ? 15 : 15;
+    }
+    const totalCols = 2 + subjects.reduce((s, subj) => s + subjCols(subj), 0);
+
+    // Title
+    const titleRow = Array(totalCols).fill('');
     titleRow[0] = `期末成绩分析总结表 - ${analysisState.fileName.replace(/\.\w+$/, '')}`;
     data.push(titleRow);
+
+    // Header 1
     const h1 = ['班级', '人数'];
-    subjects.forEach(subj => { h1.push(subj); for (let i = 0; i < 14; i++) h1.push(''); });
+    subjects.forEach(subj => {
+      h1.push(subj);
+      for (let i = 0; i < 14; i++) h1.push('');
+    });
     data.push(h1);
+
+    // Header 2
     const h2 = ['', ''];
-    subjects.forEach(() => STAT_ITEMS.forEach(item => h2.push(item)));
+    subjects.forEach(subj => {
+      const items = (columnTypes[subj] === 'grade') ? GRADE_STAT_ITEMS : STAT_ITEMS;
+      items.forEach(item => h2.push(item));
+    });
     data.push(h2);
+
+    // Data rows
     classStats.forEach(cs => {
       const row = [cs.class, cs.count];
       subjects.forEach(subj => {
         const s = cs[subj];
-        row.push(s.avg, s.avgGap, s.avgRank);
-        row.push(s.passRate * 100, s.passGap * 100, s.passRank);
-        row.push(s.goodRate * 100, s.goodGap * 100, s.goodRank);
-        row.push(s.excellentRate * 100, s.excellentGap * 100, s.excellentRank);
-        row.push(s.lowRate * 100, s.lowGap * 100, s.lowRank);
+        const isGrade = columnTypes[subj] === 'grade';
+        if (isGrade) {
+          row.push(s.A_count, +(s.A_rate * 100).toFixed(2), s.A_rank);
+          row.push(s.B_count, +(s.B_rate * 100).toFixed(2), s.B_rank);
+          row.push(s.C_count, +(s.C_rate * 100).toFixed(2), s.C_rank);
+          row.push(s.D_count, +(s.D_rate * 100).toFixed(2), s.D_rank);
+          row.push(s.E_count, +(s.E_rate * 100).toFixed(2), s.E_rank);
+        } else {
+          row.push(s.avg, s.avgGap, s.avgRank);
+          row.push(+(s.passRate * 100).toFixed(2), +(s.passGap * 100).toFixed(2), s.passRank);
+          row.push(+(s.goodRate * 100).toFixed(2), +(s.goodGap * 100).toFixed(2), s.goodRank);
+          row.push(+(s.excellentRate * 100).toFixed(2), +(s.excellentGap * 100).toFixed(2), s.excellentRank);
+          row.push(+(s.lowRate * 100).toFixed(2), +(s.lowGap * 100).toFixed(2), s.lowRank);
+        }
       });
       data.push(row);
     });
+
+    // School row
     const totalStudents = Object.values(classData).reduce((s, arr) => s + arr.length, 0);
     const sr = ['全校', totalStudents];
     subjects.forEach(subj => {
       const s = schoolStats[subj];
-      sr.push(s.avg, '', ''); sr.push(s.passRate * 100, '', '');
-      sr.push(s.goodRate * 100, '', ''); sr.push(s.excellentRate * 100, '', '');
-      sr.push(s.lowRate * 100, '', '');
+      const isGrade = columnTypes[subj] === 'grade';
+      if (isGrade) {
+        sr.push(s.A_count, +(s.A_rate * 100).toFixed(2), '');
+        sr.push(s.B_count, +(s.B_rate * 100).toFixed(2), '');
+        sr.push(s.C_count, +(s.C_rate * 100).toFixed(2), '');
+        sr.push(s.D_count, +(s.D_rate * 100).toFixed(2), '');
+        sr.push(s.E_count, +(s.E_rate * 100).toFixed(2), '');
+      } else {
+        sr.push(s.avg, '', '');
+        sr.push(+(s.passRate * 100).toFixed(2), '', '');
+        sr.push(+(s.goodRate * 100).toFixed(2), '', '');
+        sr.push(+(s.excellentRate * 100).toFixed(2), '', '');
+        sr.push(+(s.lowRate * 100).toFixed(2), '', '');
+      }
     });
     data.push(sr);
+
     const ws = XLSX.utils.aoa_to_sheet(data);
     ws['!cols'] = [{ wch: 6 }, { wch: 6 }];
     subjects.forEach(() => { for (let i = 0; i < 5; i++) ws['!cols'].push({ wch: 10 }, { wch: 10 }, { wch: 6 }); });
-    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 + subjects.length * 15 } }];
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }];
     XLSX.utils.book_append_sheet(wb, ws, '成绩分析表');
     XLSX.writeFile(wb, `成绩分析总结表_${new Date().toISOString().slice(0,10)}.xlsx`);
   } catch (err) { alert('导出失败：' + err.message); console.error(err); }
@@ -1727,8 +2032,11 @@ let teacherState = {
   rawData: null, headerRow: null, subjects: [], subjectCols: [],
   fullMarks: {}, classCol: -1, nameCol: -1,
   classData: {}, allClasses: [], fileName: '',
+  columnTypes: {},       // { subject: 'score' | 'grade' }
+  gradeData: {},         // { subject: { className: [gradeStr, ...] } }
   // Teacher assignment
   teacherFile: null, teacherMap: {}, teacherSubjects: [],
+  classTeacherMap: {},    // { className: teacherName } 班主任映射
   // Results
   subjectResults: {},
   teacherResults: {}
@@ -1767,11 +2075,139 @@ function handleFileT(file) {
     try {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
-      if (parseWorkbookCommon(workbook, teacherState, 't')) {
-        renderSubjectsT();
-        document.getElementById('subjectsCard-t').style.display = 'block';
-        setActiveStepT(1);
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+      if (json.length < 2) {
+        document.getElementById('loadingUpload-t').classList.remove('show');
+        showError('表格数据不足，至少需要表头行和一行数据', 't');
+        return;
       }
+
+      teacherState.rawData = json;
+      teacherState.headerRow = json[0];
+
+      // Find class column
+      let classCol = -1;
+      for (let i = 0; i < json[0].length; i++) {
+        if (String(json[0][i] || '').trim() === '班级') { classCol = i; break; }
+      }
+      if (classCol === -1) {
+        document.getElementById('loadingUpload-t').classList.remove('show');
+        showError('未找到"班级"列！请确保表头行（第一行）包含"班级"列名称。', 't');
+        return;
+      }
+      teacherState.classCol = classCol;
+
+      // Find name column
+      let nameCol = -1;
+      const nameKeywords = ['姓名', '名字', '学生', '学生姓名', '名称', '考生'];
+      for (let i = 0; i < json[0].length; i++) {
+        const val = String(json[0][i] || '').trim();
+        if (nameKeywords.includes(val)) { nameCol = i; break; }
+      }
+      teacherState.nameCol = nameCol;
+
+      // Extract subjects
+      const subjects = [];
+      const subjectCols = [];
+      for (let i = 0; i < json[0].length; i++) {
+        const val = String(json[0][i] || '').trim();
+        if (val === '' || val === 'null' || val === 'undefined') continue;
+        if (i === classCol || i === nameCol) continue;
+        subjects.push(val);
+        subjectCols.push(i);
+      }
+      if (subjects.length === 0) {
+        document.getElementById('loadingUpload-t').classList.remove('show');
+        showError('未能从表头中识别到学科。', 't');
+        return;
+      }
+      teacherState.subjects = subjects;
+      teacherState.subjectCols = subjectCols;
+
+      // Detect column types (score vs grade)
+      const types = {};
+      const gradeData = {};
+      subjects.forEach((subj, idx) => {
+        const colIdx = subjectCols[idx];
+        let numCount = 0;
+        let gradeCount = 0;
+        const gradeVals = {};
+        for (let r = 1; r < json.length; r++) {
+          const row = json[r];
+          const val = String(row[colIdx] || '').trim();
+          if (!val) continue;
+          const cls = String(row[classCol] || '').trim();
+          if (!cls) continue;
+          const num = parseFloat(val);
+          if (!isNaN(num)) {
+            numCount++;
+          } else if (/^[A-Ea-e]$/.test(val)) {
+            gradeCount++;
+            if (!gradeVals[cls]) gradeVals[cls] = [];
+            gradeVals[cls].push(val.toUpperCase());
+          }
+        }
+        const total = numCount + gradeCount;
+        types[subj] = (total > 0 && gradeCount > numCount) ? 'grade' : 'score';
+        if (types[subj] === 'grade') {
+          gradeData[subj] = gradeVals;
+        }
+      });
+      teacherState.columnTypes = types;
+      teacherState.gradeData = gradeData;
+
+      // Parse classData: for score subjects store numeric scores, for grade subjects store null
+      const classMap = {};
+      for (let r = 1; r < json.length; r++) {
+        const row = json[r];
+        const className = String(row[classCol] || '').trim();
+        if (!className) continue;
+        const student = {};
+        let valid = false;
+        subjects.forEach((subj, idx) => {
+          const colIdx = subjectCols[idx];
+          if (types[subj] === 'score') {
+            const val = parseFloat(row[colIdx]);
+            if (!isNaN(val)) { student[subj] = val; valid = true; }
+            else { student[subj] = null; }
+          } else {
+            // Grade subjects: store null in classData (grades handled separately)
+            student[subj] = null;
+            valid = true; // Still count the student
+          }
+        });
+        if (valid) {
+          if (!classMap[className]) classMap[className] = [];
+          classMap[className].push(student);
+        }
+      }
+
+      // If all subjects are grade and no students were added, rebuild
+      const allGrade = subjects.every(s => types[s] === 'grade');
+      if (allGrade && Object.keys(classMap).length === 0) {
+        for (let r = 1; r < json.length; r++) {
+          const row = json[r];
+          const className = String(row[classCol] || '').trim();
+          if (!className) continue;
+          const student = {};
+          subjects.forEach((subj, idx) => { student[subj] = null; });
+          if (!classMap[className]) classMap[className] = [];
+          classMap[className].push(student);
+        }
+      }
+
+      teacherState.classData = classMap;
+      teacherState.allClasses = Object.keys(classMap)
+        .map(c => isNaN(c) ? c : parseFloat(c))
+        .sort((a, b) => a - b);
+
+      renderSubjectsT();
+      document.getElementById('subjectsCard-t').style.display = 'block';
+      document.getElementById('loadingUpload-t').classList.remove('show');
+      setActiveStepT(1);
     } catch (err) {
       document.getElementById('loadingUpload-t').classList.remove('show');
       showError('文件解析失败：' + err.message, 't');
@@ -1783,11 +2219,28 @@ function handleFileT(file) {
 function renderSubjectsT() {
   const list = document.getElementById('subjectsList-t');
   list.innerHTML = '';
+  const types = teacherState.columnTypes;
   teacherState.subjects.forEach(s => {
-    const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = s;
+    const tag = document.createElement('span'); tag.className = 'tag';
+    const isGrade = types[s] === 'grade';
+    tag.textContent = s + (isGrade ? ' (等级)' : ' (分数)');
+    tag.style.cssText = isGrade
+      ? 'padding:4px 14px;background:#e8f5e9;border:1px solid #27ae60;border-radius:16px;font-size:13px;color:#27ae60;'
+      : 'padding:4px 14px;background:var(--primary-light);border:1px solid var(--primary);border-radius:16px;font-size:13px;color:var(--primary);';
     list.appendChild(tag);
   });
   document.getElementById('subjectCount-t').textContent = teacherState.subjects.length;
+  // Show type info
+  const infoEl = document.getElementById('typeInfo-t');
+  if (infoEl) {
+    const scoreCount = teacherState.subjects.filter(s => types[s] !== 'grade').length;
+    const gradeCount = teacherState.subjects.filter(s => types[s] === 'grade').length;
+    infoEl.innerHTML = scoreCount > 0 && gradeCount > 0
+      ? `📌 检测到 <strong>${scoreCount}</strong> 个分数科目（需设置满分）和 <strong>${gradeCount}</strong> 个等级科目`
+      : gradeCount > 0
+        ? `📌 检测到 <strong>${gradeCount}</strong> 个等级科目，无需设置满分`
+        : `📌 所有科目均为分数类型，请设置各科满分值`;
+  }
 }
 
 function resetUploadT() {
@@ -1795,7 +2248,9 @@ function resetUploadT() {
     rawData: null, headerRow: null, subjects: [], subjectCols: [],
     fullMarks: {}, classCol: -1, nameCol: -1,
     classData: {}, allClasses: [], fileName: '',
+    columnTypes: {}, gradeData: {},
     teacherFile: null, teacherMap: {}, teacherSubjects: [],
+    classTeacherMap: {},
     subjectResults: {}, teacherResults: {}
   };
   document.getElementById('fileInfo-t').classList.remove('show');
@@ -1876,21 +2331,28 @@ function handleTeacherFile(file) {
         return;
       }
 
-      // Extract subjects (all columns except 班级)
+      // Extract subjects and detect 班主任 column
       const teacherSubjects = [];
       const teacherSubjCols = [];
+      let classTeacherCol = -1;
       for (let i = 0; i < json[0].length; i++) {
         if (i === classCol) continue;
         const val = String(json[0][i] || '').trim();
-        if (val) {
-          teacherSubjects.push(val);
-          teacherSubjCols.push(i);
+        if (!val) continue;
+        if (val === '班主任') {
+          classTeacherCol = i;
+          continue;
         }
+        teacherSubjects.push(val);
+        teacherSubjCols.push(i);
       }
 
       // Parse teacher-class mapping: { subject: { className: teacherName } }
       const teacherMap = {};
       teacherSubjects.forEach(subj => { teacherMap[subj] = {}; });
+
+      // Parse 班主任 mapping: { className: teacherName }
+      const classTeacherMap = {};
 
       for (let r = 1; r < json.length; r++) {
         const row = json[r];
@@ -1900,10 +2362,15 @@ function handleTeacherFile(file) {
           const teacher = String(row[teacherSubjCols[idx]] || '').trim();
           if (teacher) teacherMap[subj][cls] = teacher;
         });
+        if (classTeacherCol >= 0) {
+          const ht = String(row[classTeacherCol] || '').trim();
+          if (ht) classTeacherMap[cls] = ht;
+        }
       }
 
       teacherState.teacherMap = teacherMap;
       teacherState.teacherSubjects = teacherSubjects;
+      teacherState.classTeacherMap = classTeacherMap;
       teacherState.teacherFile = file.name;
 
       document.getElementById('fileName-t2').textContent = file.name;
@@ -1927,6 +2394,20 @@ function handleTeacherFile(file) {
         html += '<div style="color:#e74c3c;font-size:13px;">⚠️ 以下学科在成绩表中未找到，将被忽略：';
         unmatchedSubjs.forEach(s => { html += `<span style="display:inline-block;padding:2px 8px;background:#fdecea;border-radius:12px;margin:2px;font-size:12px;">${s}</span>`; });
         html += '</div>';
+      }
+
+      // Show 班主任 info
+      const hasClassTeacher = Object.keys(classTeacherMap).length > 0;
+      if (hasClassTeacher) {
+        html += `<div style="margin-top:8px;font-size:13px;color:#8e44ad;">👨‍🏫 检测到班主任信息：</div>`;
+        const teachers = {};
+        Object.entries(classTeacherMap).forEach(([cls, t]) => {
+          if (!teachers[t]) teachers[t] = [];
+          teachers[t].push(cls);
+        });
+        Object.entries(teachers).forEach(([t, classes]) => {
+          html += `<span style="display:inline-block;padding:3px 10px;background:#f3e5f5;border-radius:12px;margin:3px;font-size:12px;color:#8e44ad;">${t}：${classes.join('、')} 班</span>`;
+        });
       }
 
       // Show teacher assignments
@@ -1958,17 +2439,45 @@ function handleTeacherFile(file) {
 function showFullMarksT() {
   const grid = document.getElementById('fullmarksGrid-t');
   grid.innerHTML = '';
+  const types = teacherState.columnTypes;
   // Only show subjects that are in BOTH scores and teacher file
   const subjects = teacherState.subjects.filter(s => teacherState.teacherSubjects.includes(s));
   if (subjects.length === 0) {
     grid.innerHTML = '<div class="alert alert-error">没有匹配的学科（成绩表和任课表中的学科不匹配）</div>';
     return;
   }
-  subjects.forEach(subj => {
-    const div = document.createElement('div'); div.className = 'fullmarks-item';
-    div.innerHTML = `<label for="tf_${subj}">${subj}</label><input type="number" id="tf_${subj}" value="100" min="1" step="0.5">`;
-    grid.appendChild(div);
-  });
+
+  const hasGrade = subjects.some(s => types[s] === 'grade');
+  const hasScore = subjects.some(s => types[s] !== 'grade');
+
+  if (hasGrade) {
+    subjects.forEach(subj => {
+      if (types[subj] === 'grade') {
+        const div = document.createElement('div'); div.className = 'fullmarks-item';
+        div.innerHTML = `<label style="color:#27ae60;">${subj}（等级科目）</label>
+          <div style="padding:8px 12px;background:#e8f5e9;border-radius:6px;font-size:13px;color:#27ae60;">
+            ✅ 等级数据可直接分析，无需设置满分
+          </div>`;
+        grid.appendChild(div);
+      }
+    });
+  }
+
+  if (hasScore) {
+    subjects.forEach(subj => {
+      if (types[subj] !== 'grade') {
+        const div = document.createElement('div'); div.className = 'fullmarks-item';
+        div.innerHTML = `<label for="tf_${subj}">${subj}</label><input type="number" id="tf_${subj}" value="100" min="1" step="0.5">`;
+        grid.appendChild(div);
+      }
+    });
+  }
+
+  // Update step label
+  const step3 = document.getElementById('step-t3');
+  step3.innerHTML = hasScore
+    ? '<span class="num">3</span> 设置满分'
+    : '<span class="num">3</span> 确认设置';
 }
 
 // ===== Calculation =====
@@ -1980,8 +2489,13 @@ function calculateTeacherStats() {
     return;
   }
 
+  const types = teacherState.columnTypes;
   const fullMarks = {};
   for (const subj of subjects) {
+    if (types[subj] === 'grade') {
+      fullMarks[subj] = 0; // placeholder
+      continue;
+    }
     const input = document.getElementById('tf_' + subj);
     const val = parseFloat(input.value);
     if (isNaN(val) || val <= 0) { alert(`请为"${subj}"输入有效的满分值`); input.focus(); return; }
@@ -1992,97 +2506,168 @@ function calculateTeacherStats() {
 
   setTimeout(() => {
     try {
-      const { classData, allClasses, teacherMap } = teacherState;
+      const { classData, allClasses, teacherMap, gradeData } = teacherState;
 
       const subjectResults = {};   // per-class stats by subject
       const teacherResults = {};   // per-teacher stats by subject
 
       subjects.forEach(subj => {
-        const fm = fullMarks[subj];
-        const thresholdEx = fm * 0.85;  // 优秀 ≥ 85%
-        const thresholdPass = fm * 0.60; // 及格 ≥ 60%
-        const thresholdLow = fm * 0.30;  // 低分 < 30%
-
-        // ----- Per-class stats -----
-        const classStats = [];
-        allClasses.forEach(cls => {
-          const students = classData[cls];
-          const scores = students.map(s => s[subj]).filter(v => v != null);
-          const total = scores.length;
-          if (total === 0) {
-            classStats.push({ class: cls, count: 0, sum: 0, avg: 0, excellent: 0, excellentRate: 0, pass: 0, passRate: 0, low: 0, lowRate: 0 });
-            return;
-          }
-          const sum = scores.reduce((a, b) => a + b, 0);
-          const avg = sum / total;
-          const excellent = scores.filter(s => s >= thresholdEx).length;
-          const pass = scores.filter(s => s >= thresholdPass).length;
-          const low = scores.filter(s => s < thresholdLow).length;
-          classStats.push({
-            class: cls, count: total, sum: sum, avg: avg,
-            excellent: excellent, excellentRate: excellent / total,
-            pass: pass, passRate: pass / total,
-            low: low, lowRate: low / total
-          });
-        });
-
-        // School totals
-        const allScores = [];
-        allClasses.forEach(cls => {
-          classData[cls].forEach(stu => { if (stu[subj] != null) allScores.push(stu[subj]); });
-        });
-        const schoolTotal = allScores.length;
-        const schoolSum = allScores.reduce((a, b) => a + b, 0);
-        const schoolAvg = schoolTotal > 0 ? schoolSum / schoolTotal : 0;
-        const schoolStats = {
-          count: schoolTotal, sum: schoolSum, avg: schoolAvg,
-          excellent: allScores.filter(s => s >= thresholdEx).length,
-          excellentRate: schoolTotal > 0 ? allScores.filter(s => s >= thresholdEx).length / schoolTotal : 0,
-          pass: allScores.filter(s => s >= thresholdPass).length,
-          passRate: schoolTotal > 0 ? allScores.filter(s => s >= thresholdPass).length / schoolTotal : 0,
-          low: allScores.filter(s => s < thresholdLow).length,
-          lowRate: schoolTotal > 0 ? allScores.filter(s => s < thresholdLow).length / schoolTotal : 0
-        };
-
-        subjectResults[subj] = { classStats, schoolStats };
-
-        // ----- Teacher-grouped stats -----
-        const subjTeacherMap = teacherMap[subj] || {};  // { className: teacherName }
-        const teacherGroups = {};  // { teacherName: { classes: [...], students: [...] } }
-
-        Object.entries(subjTeacherMap).forEach(([cls, teacher]) => {
-          if (!teacherGroups[teacher]) teacherGroups[teacher] = { classes: [], students: [] };
-          const clsList = isNaN(cls) ? cls : (String(cls));
-          if (!teacherGroups[teacher].classes.includes(clsList)) {
-            teacherGroups[teacher].classes.push(clsList);
-          }
-          // Add students from this class
-          if (classData[cls]) {
-            classData[cls].forEach(stu => {
-              if (stu[subj] != null) teacherGroups[teacher].students.push(stu[subj]);
+        if (types[subj] === 'grade') {
+          // ===== Grade subject: A/B/C/D/E distribution =====
+          // Per-class stats
+          const classStats = [];
+          allClasses.forEach(cls => {
+            const grades = (gradeData[subj] && gradeData[subj][cls]) || [];
+            const total = grades.length;
+            const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+            grades.forEach(g => { if (counts[g] !== undefined) counts[g]++; });
+            classStats.push({
+              class: cls, count: total,
+              A_count: counts.A, A_rate: total > 0 ? counts.A / total : 0,
+              B_count: counts.B, B_rate: total > 0 ? counts.B / total : 0,
+              C_count: counts.C, C_rate: total > 0 ? counts.C / total : 0,
+              D_count: counts.D, D_rate: total > 0 ? counts.D / total : 0,
+              E_count: counts.E, E_rate: total > 0 ? counts.E / total : 0,
+              type: 'grade'
             });
-          }
-        });
-
-        const teacherStats = [];
-        Object.entries(teacherGroups).forEach(([teacher, data]) => {
-          const scores = data.students;
-          const total = scores.length;
-          const sum = scores.reduce((a, b) => a + b, 0);
-          const avg = total > 0 ? sum / total : 0;
-          teacherStats.push({
-            teacher, classes: data.classes.join(', '),
-            count: total, sum, avg,
-            excellent: scores.filter(s => s >= thresholdEx).length,
-            excellentRate: total > 0 ? scores.filter(s => s >= thresholdEx).length / total : 0,
-            pass: scores.filter(s => s >= thresholdPass).length,
-            passRate: total > 0 ? scores.filter(s => s >= thresholdPass).length / total : 0,
-            low: scores.filter(s => s < thresholdLow).length,
-            lowRate: total > 0 ? scores.filter(s => s < thresholdLow).length / total : 0
           });
-        });
 
-        teacherResults[subj] = teacherStats;
+          // School totals
+          const allGrades = [];
+          allClasses.forEach(cls => {
+            const grades = (gradeData[subj] && gradeData[subj][cls]) || [];
+            allGrades.push(...grades);
+          });
+          const schoolTotal = allGrades.length;
+          const schoolCounts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+          allGrades.forEach(g => { if (schoolCounts[g] !== undefined) schoolCounts[g]++; });
+          const schoolStats = {
+            count: schoolTotal, type: 'grade',
+            A_count: schoolCounts.A, A_rate: schoolTotal > 0 ? schoolCounts.A / schoolTotal : 0,
+            B_count: schoolCounts.B, B_rate: schoolTotal > 0 ? schoolCounts.B / schoolTotal : 0,
+            C_count: schoolCounts.C, C_rate: schoolTotal > 0 ? schoolCounts.C / schoolTotal : 0,
+            D_count: schoolCounts.D, D_rate: schoolTotal > 0 ? schoolCounts.D / schoolTotal : 0,
+            E_count: schoolCounts.E, E_rate: schoolTotal > 0 ? schoolCounts.E / schoolTotal : 0
+          };
+
+          subjectResults[subj] = { classStats, schoolStats };
+
+          // Teacher-grouped stats for grade
+          const subjTeacherMap = teacherMap[subj] || {};
+          const teacherGroups = {};
+          Object.entries(subjTeacherMap).forEach(([cls, teacher]) => {
+            if (!teacherGroups[teacher]) teacherGroups[teacher] = { classes: [], grades: [] };
+            const clsList = isNaN(cls) ? cls : (String(cls));
+            if (!teacherGroups[teacher].classes.includes(clsList)) {
+              teacherGroups[teacher].classes.push(clsList);
+            }
+            const clsGrades = (gradeData[subj] && gradeData[subj][cls]) || [];
+            teacherGroups[teacher].grades.push(...clsGrades);
+          });
+
+          const teacherStats = [];
+          Object.entries(teacherGroups).forEach(([teacher, data]) => {
+            const grades = data.grades;
+            const total = grades.length;
+            const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+            grades.forEach(g => { if (counts[g] !== undefined) counts[g]++; });
+            teacherStats.push({
+              teacher, classes: data.classes.join(', '),
+              count: total, type: 'grade',
+              A_count: counts.A, A_rate: total > 0 ? counts.A / total : 0,
+              B_count: counts.B, B_rate: total > 0 ? counts.B / total : 0,
+              C_count: counts.C, C_rate: total > 0 ? counts.C / total : 0,
+              D_count: counts.D, D_rate: total > 0 ? counts.D / total : 0,
+              E_count: counts.E, E_rate: total > 0 ? counts.E / total : 0
+            });
+          });
+          teacherResults[subj] = teacherStats;
+        } else {
+          // ===== Score subject: avg, excellent rate, pass rate, low rate =====
+          const fm = fullMarks[subj];
+          const thresholdEx = fm * 0.85;
+          const thresholdPass = fm * 0.60;
+          const thresholdLow = fm * 0.40;
+
+          // Per-class stats
+          const classStats = [];
+          allClasses.forEach(cls => {
+            const students = classData[cls];
+            const scores = students.map(s => s[subj]).filter(v => v != null);
+            const total = scores.length;
+            if (total === 0) {
+              classStats.push({ class: cls, count: 0, sum: 0, avg: 0, excellent: 0, excellentRate: 0, pass: 0, passRate: 0, low: 0, lowRate: 0, type: 'score' });
+              return;
+            }
+            const sum = scores.reduce((a, b) => a + b, 0);
+            const avg = sum / total;
+            const excellent = scores.filter(s => s >= thresholdEx).length;
+            const pass = scores.filter(s => s >= thresholdPass).length;
+            const low = scores.filter(s => s < thresholdLow).length;
+            classStats.push({
+              class: cls, count: total, sum: sum, avg: avg,
+              excellent: excellent, excellentRate: excellent / total,
+              pass: pass, passRate: pass / total,
+              low: low, lowRate: low / total,
+              type: 'score'
+            });
+          });
+
+          // School totals
+          const allScores = [];
+          allClasses.forEach(cls => {
+            classData[cls].forEach(stu => { if (stu[subj] != null) allScores.push(stu[subj]); });
+          });
+          const schoolTotal = allScores.length;
+          const schoolSum = allScores.reduce((a, b) => a + b, 0);
+          const schoolAvg = schoolTotal > 0 ? schoolSum / schoolTotal : 0;
+          const schoolStats = {
+            count: schoolTotal, sum: schoolSum, avg: schoolAvg, type: 'score',
+            excellent: allScores.filter(s => s >= thresholdEx).length,
+            excellentRate: schoolTotal > 0 ? allScores.filter(s => s >= thresholdEx).length / schoolTotal : 0,
+            pass: allScores.filter(s => s >= thresholdPass).length,
+            passRate: schoolTotal > 0 ? allScores.filter(s => s >= thresholdPass).length / schoolTotal : 0,
+            low: allScores.filter(s => s < thresholdLow).length,
+            lowRate: schoolTotal > 0 ? allScores.filter(s => s < thresholdLow).length / schoolTotal : 0
+          };
+
+          subjectResults[subj] = { classStats, schoolStats };
+
+          // Teacher-grouped stats for score
+          const subjTeacherMap = teacherMap[subj] || {};
+          const teacherGroups = {};
+          Object.entries(subjTeacherMap).forEach(([cls, teacher]) => {
+            if (!teacherGroups[teacher]) teacherGroups[teacher] = { classes: [], students: [] };
+            const clsList = isNaN(cls) ? cls : (String(cls));
+            if (!teacherGroups[teacher].classes.includes(clsList)) {
+              teacherGroups[teacher].classes.push(clsList);
+            }
+            if (classData[cls]) {
+              classData[cls].forEach(stu => {
+                if (stu[subj] != null) teacherGroups[teacher].students.push(stu[subj]);
+              });
+            }
+          });
+
+          const teacherStats = [];
+          Object.entries(teacherGroups).forEach(([teacher, data]) => {
+            const scores = data.students;
+            const total = scores.length;
+            const sum = scores.reduce((a, b) => a + b, 0);
+            const avg = total > 0 ? sum / total : 0;
+            teacherStats.push({
+              teacher, classes: data.classes.join(', '),
+              count: total, sum, avg, type: 'score',
+              excellent: scores.filter(s => s >= thresholdEx).length,
+              excellentRate: total > 0 ? scores.filter(s => s >= thresholdEx).length / total : 0,
+              pass: scores.filter(s => s >= thresholdPass).length,
+              passRate: total > 0 ? scores.filter(s => s >= thresholdPass).length / total : 0,
+              low: scores.filter(s => s < thresholdLow).length,
+              lowRate: total > 0 ? scores.filter(s => s < thresholdLow).length / total : 0
+            });
+          });
+          teacherResults[subj] = teacherStats;
+        }
       });
 
       teacherState.subjectResults = subjectResults;
@@ -2101,7 +2686,7 @@ function calculateTeacherStats() {
 
 // ===== Rendering =====
 function renderTeacherResults() {
-  const { subjects, teacherSubjects, subjectResults, teacherResults, fullMarks, classData, allClasses } = teacherState;
+  const { subjects, teacherSubjects, subjectResults, teacherResults, fullMarks, classData, allClasses, columnTypes } = teacherState;
   const matchedSubjects = subjects.filter(s => teacherSubjects.includes(s));
 
   const totalStudents = Object.values(classData).reduce((s, a) => s + a.length, 0);
@@ -2111,20 +2696,27 @@ function renderTeacherResults() {
       <strong>${matchedSubjects.length}</strong> 个学科参与统计
     </div>`;
 
+  // Update title preview
+  updateDocTitlePreview();
+
   const container = document.getElementById('teacherResultsContainer');
   container.innerHTML = '';
 
   matchedSubjects.forEach(subj => {
-    const fm = fullMarks[subj];
+    const isGrade = columnTypes[subj] === 'grade';
+    const fm = isGrade ? '' : fullMarks[subj];
     const res = subjectResults[subj];
     const tRes = teacherResults[subj];
 
     const block = document.createElement('div');
     block.className = 'card';
     block.style.cssText = 'padding:20px;margin-bottom:20px;';
+    const subjLabel = isGrade
+      ? `<span style="font-size:14px;font-weight:400;color:#27ae60;">（等级科目）</span>`
+      : `<span style="font-size:14px;font-weight:400;color:var(--text-light);">（满分 ${fm} 分）</span>`;
     block.innerHTML = `
-      <div style="font-size:18px;font-weight:700;color:var(--primary);margin-bottom:16px;">
-        📚 ${subj} <span style="font-size:14px;font-weight:400;color:var(--text-light);">（满分 ${fm} 分）</span>
+      <div style="font-size:18px;font-weight:700;color:${isGrade ? '#27ae60' : 'var(--primary)'};margin-bottom:16px;">
+        📚 ${subj} ${subjLabel}
       </div>
 
       <!-- Per-class table -->
@@ -2151,87 +2743,137 @@ function renderTeacherResults() {
 function renderTeacherPerClass(subj, classStats, schoolStats) {
   const table = document.getElementById('tbl_pc_' + subj);
   table.innerHTML = '';
+  const types = teacherState.columnTypes;
+  const isGrade = types[subj] === 'grade';
+  const hasClassTeacher = Object.keys(teacherState.classTeacherMap || {}).length > 0;
+  const ctMap = teacherState.classTeacherMap || {};
 
-  // Header
-  const thead = table.createTHead();
-  const hr = thead.insertRow();
-  const headers = ['班级', '人数', '总分', '平均分', '优秀人数', '优秀率', '及格人数', '及格率', '低分人数', '低分率'];
-  headers.forEach(h => {
-    const c = hr.insertCell(); c.textContent = h;
-    c.style.cssText = 'background:#0070C0;color:white;font-weight:600;text-align:center;padding:6px 8px;';
-  });
+  if (isGrade) {
+    // Grade subject header
+    const thead = table.createTHead();
+    const hr = thead.insertRow();
+    const headers = ['班级', '人数', 'A人数', 'A率', 'B人数', 'B率', 'C人数', 'C率', 'D人数', 'D率', 'E人数', 'E率'];
+    if (hasClassTeacher) headers.push('班主任');
+    headers.forEach(h => {
+      const c = hr.insertCell(); c.textContent = h;
+      c.style.cssText = 'background:#27ae60;color:white;font-weight:600;text-align:center;padding:6px 8px;';
+    });
 
-  // Data rows
-  classStats.forEach(cs => {
-    const row = table.insertRow();
-    row.insertCell().textContent = cs.class;
-    row.insertCell().textContent = cs.count;
-    row.insertCell().textContent = cs.sum.toFixed(2);
-    row.lastChild.style.textAlign = 'right';
-    row.insertCell().textContent = cs.avg.toFixed(2);
-    row.lastChild.style.textAlign = 'right';
-    row.insertCell().textContent = cs.excellent;
-    row.insertCell().textContent = (cs.excellentRate * 100).toFixed(2) + '%';
-    row.lastChild.style.textAlign = 'right';
-    row.insertCell().textContent = cs.pass;
-    row.insertCell().textContent = (cs.passRate * 100).toFixed(2) + '%';
-    row.lastChild.style.textAlign = 'right';
-    row.insertCell().textContent = cs.low;
-    row.insertCell().textContent = (cs.lowRate * 100).toFixed(2) + '%';
-    row.lastChild.style.textAlign = 'right';
-  });
+    // Data rows
+    classStats.forEach(cs => {
+      const row = table.insertRow();
+      const cells = [cs.class, cs.count, cs.A_count, (cs.A_rate*100).toFixed(2)+'%', cs.B_count, (cs.B_rate*100).toFixed(2)+'%', cs.C_count, (cs.C_rate*100).toFixed(2)+'%', cs.D_count, (cs.D_rate*100).toFixed(2)+'%', cs.E_count, (cs.E_rate*100).toFixed(2)+'%'];
+      if (hasClassTeacher) cells.push(ctMap[cs.class] || '');
+      cells.forEach((v, i) => {
+        const c = row.insertCell(); c.textContent = v;
+        if (i > 1) c.style.textAlign = 'right';
+      });
+    });
 
-  // School total row
-  const sr = table.insertRow(); sr.className = 'school-row';
-  sr.insertCell().textContent = '全校';
-  sr.insertCell().textContent = schoolStats.count;
-  sr.insertCell().textContent = schoolStats.sum.toFixed(2);
-  sr.lastChild.style.textAlign = 'right';
-  sr.insertCell().textContent = schoolStats.avg.toFixed(2);
-  sr.lastChild.style.textAlign = 'right';
-  sr.insertCell().textContent = schoolStats.excellent;
-  sr.insertCell().textContent = (schoolStats.excellentRate * 100).toFixed(2) + '%';
-  sr.lastChild.style.textAlign = 'right';
-  sr.insertCell().textContent = schoolStats.pass;
-  sr.insertCell().textContent = (schoolStats.passRate * 100).toFixed(2) + '%';
-  sr.lastChild.style.textAlign = 'right';
-  sr.insertCell().textContent = schoolStats.low;
-  sr.insertCell().textContent = (schoolStats.lowRate * 100).toFixed(2) + '%';
-  sr.lastChild.style.textAlign = 'right';
+    // School row
+    const sr = table.insertRow(); sr.className = 'school-row';
+    const sc = schoolStats;
+    const sCells = ['全校', sc.count, sc.A_count, (sc.A_rate*100).toFixed(2)+'%', sc.B_count, (sc.B_rate*100).toFixed(2)+'%', sc.C_count, (sc.C_rate*100).toFixed(2)+'%', sc.D_count, (sc.D_rate*100).toFixed(2)+'%', sc.E_count, (sc.E_rate*100).toFixed(2)+'%'];
+    if (hasClassTeacher) sCells.push('');
+    sCells.forEach((v, i) => {
+      const c = sr.insertCell(); c.textContent = v;
+      if (i > 1) c.style.textAlign = 'right';
+    });
+  } else {
+    // Score subject header
+    const thead = table.createTHead();
+    const hr = thead.insertRow();
+    const headers = ['班级', '人数', '总分', '平均分', '优秀人数', '优秀率', '及格人数', '及格率', '低分人数', '低分率'];
+    if (hasClassTeacher) headers.push('班主任');
+    headers.forEach(h => {
+      const c = hr.insertCell(); c.textContent = h;
+      c.style.cssText = 'background:#0070C0;color:white;font-weight:600;text-align:center;padding:6px 8px;';
+    });
+
+    // Data rows
+    classStats.forEach(cs => {
+      const row = table.insertRow();
+      const cells = [cs.class, cs.count, cs.sum.toFixed(2), cs.avg.toFixed(2), cs.excellent, (cs.excellentRate*100).toFixed(2)+'%', cs.pass, (cs.passRate*100).toFixed(2)+'%', cs.low, (cs.lowRate*100).toFixed(2)+'%'];
+      if (hasClassTeacher) cells.push(ctMap[cs.class] || '');
+      cells.forEach((v, i) => {
+        const c = row.insertCell(); c.textContent = v;
+        if (i > 1) c.style.textAlign = 'right';
+      });
+    });
+
+    // School total row
+    const sr = table.insertRow(); sr.className = 'school-row';
+    const sc = schoolStats;
+    const sCells = ['全校', sc.count, sc.sum.toFixed(2), sc.avg.toFixed(2), sc.excellent, (sc.excellentRate*100).toFixed(2)+'%', sc.pass, (sc.passRate*100).toFixed(2)+'%', sc.low, (sc.lowRate*100).toFixed(2)+'%'];
+    if (hasClassTeacher) sCells.push('');
+    sCells.forEach((v, i) => {
+      const c = sr.insertCell(); c.textContent = v;
+      if (i > 1) c.style.textAlign = 'right';
+    });
+  }
 }
 
 function renderTeacherPerTeacher(subj, teacherStats) {
   const table = document.getElementById('tbl_pt_' + subj);
   table.innerHTML = '';
+  const types = teacherState.columnTypes;
+  const isGrade = types[subj] === 'grade';
 
-  const thead = table.createTHead();
-  const hr = thead.insertRow();
-  const headers = ['任课教师', '任教班级', '人数', '总分', '平均分', '优秀人数', '优秀率', '及格人数', '及格率', '低分人数', '低分率'];
-  headers.forEach(h => {
-    const c = hr.insertCell(); c.textContent = h;
-    c.style.cssText = 'background:#005a9e;color:white;font-weight:600;text-align:center;padding:6px 8px;';
-  });
+  if (isGrade) {
+    const thead = table.createTHead();
+    const hr = thead.insertRow();
+    const headers = ['任课教师', '任教班级', '人数', 'A人数', 'A率', 'B人数', 'B率', 'C人数', 'C率', 'D人数', 'D率', 'E人数', 'E率'];
+    headers.forEach(h => {
+      const c = hr.insertCell(); c.textContent = h;
+      c.style.cssText = 'background:#1b8a3f;color:white;font-weight:600;text-align:center;padding:6px 8px;';
+    });
 
-  teacherStats.forEach(ts => {
-    const row = table.insertRow();
-    row.insertCell().textContent = ts.teacher;
-    row.lastChild.style.fontWeight = '600';
-    row.insertCell().textContent = ts.classes;
-    row.insertCell().textContent = ts.count;
-    row.insertCell().textContent = ts.sum.toFixed(2);
-    row.lastChild.style.textAlign = 'right';
-    row.insertCell().textContent = ts.avg.toFixed(2);
-    row.lastChild.style.textAlign = 'right';
-    row.insertCell().textContent = ts.excellent;
-    row.insertCell().textContent = (ts.excellentRate * 100).toFixed(2) + '%';
-    row.lastChild.style.textAlign = 'right';
-    row.insertCell().textContent = ts.pass;
-    row.insertCell().textContent = (ts.passRate * 100).toFixed(2) + '%';
-    row.lastChild.style.textAlign = 'right';
-    row.insertCell().textContent = ts.low;
-    row.insertCell().textContent = (ts.lowRate * 100).toFixed(2) + '%';
-    row.lastChild.style.textAlign = 'right';
-  });
+    teacherStats.forEach(ts => {
+      const row = table.insertRow();
+      const cells = [ts.teacher, ts.classes, ts.count, ts.A_count, (ts.A_rate*100).toFixed(2)+'%', ts.B_count, (ts.B_rate*100).toFixed(2)+'%', ts.C_count, (ts.C_rate*100).toFixed(2)+'%', ts.D_count, (ts.D_rate*100).toFixed(2)+'%', ts.E_count, (ts.E_rate*100).toFixed(2)+'%'];
+      cells.forEach((v, i) => {
+        const c = row.insertCell(); c.textContent = v;
+        if (i === 0) c.style.fontWeight = '600';
+        if (i > 2) c.style.textAlign = 'right';
+      });
+    });
+  } else {
+    const thead = table.createTHead();
+    const hr = thead.insertRow();
+    const headers = ['任课教师', '任教班级', '人数', '总分', '平均分', '优秀人数', '优秀率', '及格人数', '及格率', '低分人数', '低分率'];
+    headers.forEach(h => {
+      const c = hr.insertCell(); c.textContent = h;
+      c.style.cssText = 'background:#005a9e;color:white;font-weight:600;text-align:center;padding:6px 8px;';
+    });
+
+    teacherStats.forEach(ts => {
+      const row = table.insertRow();
+      const cells = [ts.teacher, ts.classes, ts.count, ts.sum.toFixed(2), ts.avg.toFixed(2), ts.excellent, (ts.excellentRate*100).toFixed(2)+'%', ts.pass, (ts.passRate*100).toFixed(2)+'%', ts.low, (ts.lowRate*100).toFixed(2)+'%'];
+      cells.forEach((v, i) => {
+        const c = row.insertCell(); c.textContent = v;
+        if (i === 0) c.style.fontWeight = '600';
+        if (i > 2) c.style.textAlign = 'right';
+      });
+    });
+  }
+}
+
+// ===== Document Title Preview =====
+function updateDocTitlePreview() {
+  const school = document.getElementById('docSchoolName').value.trim() || '学校';
+  const year = document.getElementById('docYear').value.trim() || '学年';
+  const term = document.getElementById('docTerm').value;
+  const grade = document.getElementById('docGrade').value.trim() || '年级';
+  const cumulative = document.getElementById('docCumulative').checked;
+  const suffix = cumulative ? '(累计)' : '';
+  const title = `${school}${year}${term}${grade}期末考试成绩统计表${suffix}`;
+  const preview = document.getElementById('docTitlePreview');
+  if (preview) preview.textContent = title;
+  return title;
+}
+
+function getDocTitle() {
+  return updateDocTitlePreview();
 }
 
 // ===== Export as Word Document =====
@@ -2241,11 +2883,11 @@ function exportTeacherWord() {
     return;
   }
   try {
-    const { subjects, teacherSubjects, subjectResults, teacherResults, fullMarks, fileName, classData, allClasses } = teacherState;
+    const { subjects, teacherSubjects, subjectResults, teacherResults, fullMarks, fileName, classData, allClasses, columnTypes, classTeacherMap } = teacherState;
     const matchedSubjects = subjects.filter(s => teacherSubjects.includes(s));
     const totalStudents = Object.values(classData).reduce((s, a) => s + a.length, 0);
+    const docTitle = getDocTitle();
 
-    // Build document using docx library
     const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, TextRun, HeadingLevel, ShadingType } = docx;
 
     const children = [];
@@ -2261,9 +2903,9 @@ function exportTeacherWord() {
       });
     }
 
-    // Title
+    // Main Title
     children.push(new Paragraph({
-      children: [new TextRun({ text: `${fileName.replace(/\.\w+$/, '')} - 教师统计表`, font: '宋体', size: 32, bold: true })],
+      children: [new TextRun({ text: docTitle, font: '宋体', size: 32, bold: true })],
       alignment: AlignmentType.CENTER,
       spacing: { after: 200 }
     }));
@@ -2276,33 +2918,51 @@ function exportTeacherWord() {
 
     // For each subject
     matchedSubjects.forEach((subj, si) => {
-      const fm = fullMarks[subj];
+      const isGrade = columnTypes[subj] === 'grade';
+      const fm = isGrade ? '' : fullMarks[subj];
       const res = subjectResults[subj];
       const tRes = teacherResults[subj];
 
       // Subject title
+      const subjLabel = isGrade ? `学科：${subj}（等级科目）` : `学科：${subj}（满分 ${fm} 分）`;
       children.push(new Paragraph({
-        children: [new TextRun({ text: `学科：${subj}（满分 ${fm} 分）`, font: '宋体', size: 26, bold: true })],
+        children: [new TextRun({ text: subjLabel, font: '宋体', size: 26, bold: true })],
         alignment: AlignmentType.LEFT,
         spacing: { before: 300, after: 200 }
       }));
 
-      // Per-class section title
+      // ========== Per-class section ==========
       children.push(new Paragraph({
         children: [new TextRun({ text: '一、各班统计', font: '宋体', size: 24, bold: true })],
         spacing: { before: 200, after: 150 }
       }));
 
-      // Per-class table
-      const pcHeaders = ['班级', '人数', '总分', '平均分', '优秀\n人数', '优秀率', '及格\n人数', '及格率', '低分\n人数', '低分率'];
+      let pcHeaders, pcShading, pcRows;
+      const hasCT = Object.keys(classTeacherMap || {}).length > 0;
+      if (isGrade) {
+        pcHeaders = ['班级', '人数', 'A人数', 'A率', 'B人数', 'B率', 'C人数', 'C率', 'D人数', 'D率', 'E人数', 'E率'];
+        if (hasCT) pcHeaders.push('班主任');
+        pcShading = '27AE60';
+      } else {
+        pcHeaders = ['班级', '人数', '总分', '平均分', '优秀\n人数', '优秀率', '及格\n人数', '及格率', '低分\n人数', '低分率'];
+        if (hasCT) pcHeaders.push('班主任');
+        pcShading = '0070C0';
+      }
+
       const pcHeaderRow = new TableRow({
-        children: pcHeaders.map(h => tc(h, { bold: true, shading: '0070C0', color: 'FFFFFF' })),
+        children: pcHeaders.map(h => tc(h, { bold: true, shading: pcShading, color: 'FFFFFF' })),
         tableHeader: true
       });
+      pcRows = [pcHeaderRow];
 
-      const pcRows = [pcHeaderRow];
       res.classStats.forEach(cs => {
-        const vals = [cs.class, cs.count, cs.sum.toFixed(2), cs.avg.toFixed(2), cs.excellent, (cs.excellentRate * 100).toFixed(2) + '%', cs.pass, (cs.passRate * 100).toFixed(2) + '%', cs.low, (cs.lowRate * 100).toFixed(2) + '%'];
+        let vals;
+        if (isGrade) {
+          vals = [cs.class, cs.count, cs.A_count, (cs.A_rate * 100).toFixed(2) + '%', cs.B_count, (cs.B_rate * 100).toFixed(2) + '%', cs.C_count, (cs.C_rate * 100).toFixed(2) + '%', cs.D_count, (cs.D_rate * 100).toFixed(2) + '%', cs.E_count, (cs.E_rate * 100).toFixed(2) + '%'];
+        } else {
+          vals = [cs.class, cs.count, cs.sum.toFixed(2), cs.avg.toFixed(2), cs.excellent, (cs.excellentRate * 100).toFixed(2) + '%', cs.pass, (cs.passRate * 100).toFixed(2) + '%', cs.low, (cs.lowRate * 100).toFixed(2) + '%'];
+        }
+        if (hasCT) vals.push(classTeacherMap[cs.class] || '');
         pcRows.push(new TableRow({
           children: vals.map((v, i) => tc(v, { align: i === 0 ? AlignmentType.CENTER : AlignmentType.RIGHT }))
         }));
@@ -2310,7 +2970,13 @@ function exportTeacherWord() {
 
       // School row
       const ss = res.schoolStats;
-      const schoolVals = ['全校', ss.count, ss.sum.toFixed(2), ss.avg.toFixed(2), ss.excellent, (ss.excellentRate * 100).toFixed(2) + '%', ss.pass, (ss.passRate * 100).toFixed(2) + '%', ss.low, (ss.lowRate * 100).toFixed(2) + '%'];
+      let schoolVals;
+      if (isGrade) {
+        schoolVals = ['全校', ss.count, ss.A_count, (ss.A_rate * 100).toFixed(2) + '%', ss.B_count, (ss.B_rate * 100).toFixed(2) + '%', ss.C_count, (ss.C_rate * 100).toFixed(2) + '%', ss.D_count, (ss.D_rate * 100).toFixed(2) + '%', ss.E_count, (ss.E_rate * 100).toFixed(2) + '%'];
+      } else {
+        schoolVals = ['全校', ss.count, ss.sum.toFixed(2), ss.avg.toFixed(2), ss.excellent, (ss.excellentRate * 100).toFixed(2) + '%', ss.pass, (ss.passRate * 100).toFixed(2) + '%', ss.low, (ss.lowRate * 100).toFixed(2) + '%'];
+      }
+      if (hasCT) schoolVals.push('');
       pcRows.push(new TableRow({
         children: schoolVals.map((v, i) => tc(v, { align: i === 0 ? AlignmentType.CENTER : AlignmentType.RIGHT, shading: 'FFF3CD' }))
       }));
@@ -2320,22 +2986,34 @@ function exportTeacherWord() {
         width: { size: 100, type: WidthType.PERCENTAGE },
       }));
 
-      // Per-teacher section title
+      // ========== Per-teacher section ==========
       children.push(new Paragraph({
         children: [new TextRun({ text: '二、教师统计', font: '宋体', size: 24, bold: true })],
         spacing: { before: 300, after: 150 }
       }));
 
-      // Per-teacher table
-      const ptHeaders = ['任课教师', '任教班级', '人数', '总分', '平均分', '优秀\n人数', '优秀率', '及格\n人数', '及格率', '低分\n人数', '低分率'];
+      let ptHeaders, ptShading;
+      if (isGrade) {
+        ptHeaders = ['任课教师', '任教班级', '人数', 'A人数', 'A率', 'B人数', 'B率', 'C人数', 'C率', 'D人数', 'D率', 'E人数', 'E率'];
+        ptShading = '1B8A3F';
+      } else {
+        ptHeaders = ['任课教师', '任教班级', '人数', '总分', '平均分', '优秀\n人数', '优秀率', '及格\n人数', '及格率', '低分\n人数', '低分率'];
+        ptShading = '005A9E';
+      }
+
       const ptHeaderRow = new TableRow({
-        children: ptHeaders.map(h => tc(h, { bold: true, shading: '005A9E', color: 'FFFFFF' })),
+        children: ptHeaders.map(h => tc(h, { bold: true, shading: ptShading, color: 'FFFFFF' })),
         tableHeader: true
       });
 
       const ptRows = [ptHeaderRow];
       tRes.forEach(ts => {
-        const vals = [ts.teacher, ts.classes, ts.count, ts.sum.toFixed(2), ts.avg.toFixed(2), ts.excellent, (ts.excellentRate * 100).toFixed(2) + '%', ts.pass, (ts.passRate * 100).toFixed(2) + '%', ts.low, (ts.lowRate * 100).toFixed(2) + '%'];
+        let vals;
+        if (isGrade) {
+          vals = [ts.teacher, ts.classes, ts.count, ts.A_count, (ts.A_rate * 100).toFixed(2) + '%', ts.B_count, (ts.B_rate * 100).toFixed(2) + '%', ts.C_count, (ts.C_rate * 100).toFixed(2) + '%', ts.D_count, (ts.D_rate * 100).toFixed(2) + '%', ts.E_count, (ts.E_rate * 100).toFixed(2) + '%'];
+        } else {
+          vals = [ts.teacher, ts.classes, ts.count, ts.sum.toFixed(2), ts.avg.toFixed(2), ts.excellent, (ts.excellentRate * 100).toFixed(2) + '%', ts.pass, (ts.passRate * 100).toFixed(2) + '%', ts.low, (ts.lowRate * 100).toFixed(2) + '%'];
+        }
         ptRows.push(new TableRow({
           children: vals.map((v, i) => tc(v, { align: i <= 1 ? AlignmentType.CENTER : AlignmentType.RIGHT }))
         }));
@@ -2358,7 +3036,7 @@ function exportTeacherWord() {
     });
 
     Packer.toBlob(doc).then(blob => {
-      saveAs(blob, `教师统计表_${new Date().toISOString().slice(0,10)}.docx`);
+      saveAs(blob, docTitle + '.docx');
     });
   } catch (err) {
     alert('导出失败：' + err.message);
