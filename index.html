@@ -1257,13 +1257,18 @@ function calcGradeRates(grades) {
   }
   const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
   grades.forEach(g => { if (counts[g] !== undefined) counts[g]++; });
+  const a = counts.A;
+  const b = counts.A + counts.B;
+  const c = counts.A + counts.B + counts.C;
+  const d = counts.A + counts.B + counts.C + counts.D;
+  const e = counts.E;
   return {
     total,
-    A_count: counts.A, A_rate: counts.A / total,
-    B_count: counts.B, B_rate: counts.B / total,
-    C_count: counts.C, C_rate: counts.C / total,
-    D_count: counts.D, D_rate: counts.D / total,
-    E_count: counts.E, E_rate: counts.E / total
+    A_count: a, A_rate: a / total,
+    B_count: b, B_rate: b / total,
+    C_count: c, C_rate: c / total,
+    D_count: d, D_rate: d / total,
+    E_count: e, E_rate: e / total
   };
 }
 
@@ -2521,13 +2526,18 @@ function calculateTeacherStats() {
             const total = grades.length;
             const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
             grades.forEach(g => { if (counts[g] !== undefined) counts[g]++; });
+            const ca = counts.A;
+            const cb = counts.A + counts.B;
+            const cc = counts.A + counts.B + counts.C;
+            const cd = counts.A + counts.B + counts.C + counts.D;
+            const ce = counts.E;
             classStats.push({
               class: cls, count: total,
-              A_count: counts.A, A_rate: total > 0 ? counts.A / total : 0,
-              B_count: counts.B, B_rate: total > 0 ? counts.B / total : 0,
-              C_count: counts.C, C_rate: total > 0 ? counts.C / total : 0,
-              D_count: counts.D, D_rate: total > 0 ? counts.D / total : 0,
-              E_count: counts.E, E_rate: total > 0 ? counts.E / total : 0,
+              A_count: ca, A_rate: total > 0 ? ca / total : 0,
+              B_count: cb, B_rate: total > 0 ? cb / total : 0,
+              C_count: cc, C_rate: total > 0 ? cc / total : 0,
+              D_count: cd, D_rate: total > 0 ? cd / total : 0,
+              E_count: ce, E_rate: total > 0 ? ce / total : 0,
               type: 'grade'
             });
           });
@@ -2541,13 +2551,18 @@ function calculateTeacherStats() {
           const schoolTotal = allGrades.length;
           const schoolCounts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
           allGrades.forEach(g => { if (schoolCounts[g] !== undefined) schoolCounts[g]++; });
+          const sa = schoolCounts.A;
+          const sb = schoolCounts.A + schoolCounts.B;
+          const scnt = schoolCounts.A + schoolCounts.B + schoolCounts.C;
+          const sd = schoolCounts.A + schoolCounts.B + schoolCounts.C + schoolCounts.D;
+          const se = schoolCounts.E;
           const schoolStats = {
             count: schoolTotal, type: 'grade',
-            A_count: schoolCounts.A, A_rate: schoolTotal > 0 ? schoolCounts.A / schoolTotal : 0,
-            B_count: schoolCounts.B, B_rate: schoolTotal > 0 ? schoolCounts.B / schoolTotal : 0,
-            C_count: schoolCounts.C, C_rate: schoolTotal > 0 ? schoolCounts.C / schoolTotal : 0,
-            D_count: schoolCounts.D, D_rate: schoolTotal > 0 ? schoolCounts.D / schoolTotal : 0,
-            E_count: schoolCounts.E, E_rate: schoolTotal > 0 ? schoolCounts.E / schoolTotal : 0
+            A_count: sa, A_rate: schoolTotal > 0 ? sa / schoolTotal : 0,
+            B_count: sb, B_rate: schoolTotal > 0 ? sb / schoolTotal : 0,
+            C_count: scnt, C_rate: schoolTotal > 0 ? scnt / schoolTotal : 0,
+            D_count: sd, D_rate: schoolTotal > 0 ? sd / schoolTotal : 0,
+            E_count: se, E_rate: schoolTotal > 0 ? se / schoolTotal : 0
           };
 
           subjectResults[subj] = { classStats, schoolStats };
@@ -2575,9 +2590,9 @@ function calculateTeacherStats() {
               teacher, classes: data.classes.join(', '),
               count: total, type: 'grade',
               A_count: counts.A, A_rate: total > 0 ? counts.A / total : 0,
-              B_count: counts.B, B_rate: total > 0 ? counts.B / total : 0,
-              C_count: counts.C, C_rate: total > 0 ? counts.C / total : 0,
-              D_count: counts.D, D_rate: total > 0 ? counts.D / total : 0,
+              B_count: counts.A + counts.B, B_rate: total > 0 ? (counts.A + counts.B) / total : 0,
+              C_count: counts.A + counts.B + counts.C, C_rate: total > 0 ? (counts.A + counts.B + counts.C) / total : 0,
+              D_count: counts.A + counts.B + counts.C + counts.D, D_rate: total > 0 ? (counts.A + counts.B + counts.C + counts.D) / total : 0,
               E_count: counts.E, E_rate: total > 0 ? counts.E / total : 0
             });
           });
@@ -2819,6 +2834,26 @@ function renderTeacherPerTeacher(subj, teacherStats) {
   const types = teacherState.columnTypes;
   const isGrade = types[subj] === 'grade';
 
+  // Compute school total row from teacher stats
+  function schoolRowFromTeachers(ts) {
+    if (isGrade) {
+      const total = ts.reduce((s, t) => s + t.count, 0);
+      const a = ts.reduce((s, t) => s + t.A_count, 0);
+      const b = ts.reduce((s, t) => s + t.B_count, 0);
+      const c = ts.reduce((s, t) => s + t.C_count, 0);
+      const d = ts.reduce((s, t) => s + t.D_count, 0);
+      const e = ts.reduce((s, t) => s + t.E_count, 0);
+      return { count: total, A_count: a, A_rate: total > 0 ? a / total : 0, B_count: b, B_rate: total > 0 ? b / total : 0, C_count: c, C_rate: total > 0 ? c / total : 0, D_count: d, D_rate: total > 0 ? d / total : 0, E_count: e, E_rate: total > 0 ? e / total : 0 };
+    } else {
+      const total = ts.reduce((s, t) => s + t.count, 0);
+      const sum = ts.reduce((s, t) => s + t.sum, 0);
+      const excellent = ts.reduce((s, t) => s + t.excellent, 0);
+      const pass = ts.reduce((s, t) => s + t.pass, 0);
+      const low = ts.reduce((s, t) => s + t.low, 0);
+      return { count: total, sum: sum, avg: total > 0 ? sum / total : 0, excellent, excellentRate: total > 0 ? excellent / total : 0, pass, passRate: total > 0 ? pass / total : 0, low, lowRate: total > 0 ? low / total : 0 };
+    }
+  }
+
   if (isGrade) {
     const thead = table.createTHead();
     const hr = thead.insertRow();
@@ -2837,6 +2872,18 @@ function renderTeacherPerTeacher(subj, teacherStats) {
         if (i > 2) c.style.textAlign = 'right';
       });
     });
+
+    // School row
+    if (teacherStats.length > 0) {
+      const sr = table.insertRow(); sr.className = 'school-row';
+      const ss = schoolRowFromTeachers(teacherStats);
+      const cells = ['全校', '', ss.count, ss.A_count, (ss.A_rate*100).toFixed(2)+'%', ss.B_count, (ss.B_rate*100).toFixed(2)+'%', ss.C_count, (ss.C_rate*100).toFixed(2)+'%', ss.D_count, (ss.D_rate*100).toFixed(2)+'%', ss.E_count, (ss.E_rate*100).toFixed(2)+'%'];
+      cells.forEach((v, i) => {
+        const c = sr.insertCell(); c.textContent = v;
+        if (i === 0) c.style.fontWeight = '600';
+        if (i > 2) c.style.textAlign = 'right';
+      });
+    }
   } else {
     const thead = table.createTHead();
     const hr = thead.insertRow();
@@ -2855,6 +2902,18 @@ function renderTeacherPerTeacher(subj, teacherStats) {
         if (i > 2) c.style.textAlign = 'right';
       });
     });
+
+    // School row
+    if (teacherStats.length > 0) {
+      const sr = table.insertRow(); sr.className = 'school-row';
+      const ss = schoolRowFromTeachers(teacherStats);
+      const cells = ['全校', '', ss.count, ss.sum.toFixed(2), ss.avg.toFixed(2), ss.excellent, (ss.excellentRate*100).toFixed(2)+'%', ss.pass, (ss.passRate*100).toFixed(2)+'%', ss.low, (ss.lowRate*100).toFixed(2)+'%'];
+      cells.forEach((v, i) => {
+        const c = sr.insertCell(); c.textContent = v;
+        if (i === 0) c.style.fontWeight = '600';
+        if (i > 2) c.style.textAlign = 'right';
+      });
+    }
   }
 }
 
@@ -3018,6 +3077,30 @@ function exportTeacherWord() {
           children: vals.map((v, i) => tc(v, { align: i <= 1 ? AlignmentType.CENTER : AlignmentType.RIGHT }))
         }));
       });
+
+      // School total row for teacher stats
+      if (tRes.length > 0) {
+        let schoolValsPT;
+        if (isGrade) {
+          const total = tRes.reduce((s, t) => s + t.count, 0);
+          const a = tRes.reduce((s, t) => s + t.A_count, 0);
+          const b = tRes.reduce((s, t) => s + t.B_count, 0);
+          const c = tRes.reduce((s, t) => s + t.C_count, 0);
+          const d = tRes.reduce((s, t) => s + t.D_count, 0);
+          const e = tRes.reduce((s, t) => s + t.E_count, 0);
+          schoolValsPT = ['全校', '', total, a, (total > 0 ? (a / total * 100).toFixed(2) : '0') + '%', b, (total > 0 ? (b / total * 100).toFixed(2) : '0') + '%', c, (total > 0 ? (c / total * 100).toFixed(2) : '0') + '%', d, (total > 0 ? (d / total * 100).toFixed(2) : '0') + '%', e, (total > 0 ? (e / total * 100).toFixed(2) : '0') + '%'];
+        } else {
+          const total = tRes.reduce((s, t) => s + t.count, 0);
+          const sum = tRes.reduce((s, t) => s + t.sum, 0);
+          const excellent = tRes.reduce((s, t) => s + t.excellent, 0);
+          const pass = tRes.reduce((s, t) => s + t.pass, 0);
+          const low = tRes.reduce((s, t) => s + t.low, 0);
+          schoolValsPT = ['全校', '', total, sum.toFixed(2), total > 0 ? (sum / total).toFixed(2) : '0', excellent, (total > 0 ? (excellent / total * 100).toFixed(2) : '0') + '%', pass, (total > 0 ? (pass / total * 100).toFixed(2) : '0') + '%', low, (total > 0 ? (low / total * 100).toFixed(2) : '0') + '%'];
+        }
+        ptRows.push(new TableRow({
+          children: schoolValsPT.map((v, i) => tc(v, { align: i <= 1 ? AlignmentType.CENTER : AlignmentType.RIGHT, shading: 'FFF3CD' }))
+        }));
+      }
 
       children.push(new Table({
         rows: ptRows,
